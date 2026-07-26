@@ -1291,16 +1291,37 @@ function HexInput(props: FormatInputProps) {
   const hexValue = rgbToHex(color);
   const alphaValue = Math.round((color?.a ?? 1) * 100);
 
+  // Local state so the user can type freely without the field being reset
+  // on every keystroke that isn't yet a valid full hex.
+  const [inputValue, setInputValue] = React.useState(hexValue);
+
+  // Sync external color changes back into the local input (e.g. from hue slider)
+  const prevHexRef = React.useRef(hexValue);
+  React.useEffect(() => {
+    if (hexValue !== prevHexRef.current) {
+      prevHexRef.current = hexValue;
+      setInputValue(hexValue);
+    }
+  }, [hexValue]);
+
   const onHexChange = React.useCallback(
     (event: React.ChangeEvent<InputElement>) => {
       const value = event.target.value;
+      setInputValue(value);
       const parsedColor = parseColorString(value);
       if (parsedColor) {
+        prevHexRef.current = rgbToHex(parsedColor);
         onColorChange({ ...parsedColor, a: color?.a ?? 1 });
       }
     },
     [color, onColorChange],
   );
+
+  // When focus leaves, reset the field to the current valid hex if the
+  // user typed something invalid.
+  const onHexBlur = React.useCallback(() => {
+    setInputValue(hexValue);
+  }, [hexValue]);
 
   const onAlphaChange = React.useCallback(
     (event: React.ChangeEvent<InputElement>) => {
@@ -1320,8 +1341,9 @@ function HexInput(props: FormatInputProps) {
         {...inputProps}
         placeholder="#000000"
         className={cn("font-mono", className)}
-        value={hexValue}
+        value={inputValue}
         onChange={onHexChange}
+        onBlur={onHexBlur}
         disabled={context.disabled}
       />
     );
@@ -1338,8 +1360,9 @@ function HexInput(props: FormatInputProps) {
         {...inputProps}
         placeholder="#000000"
         className="flex-1 font-mono"
-        value={hexValue}
+        value={inputValue}
         onChange={onHexChange}
+        onBlur={onHexBlur}
         disabled={context.disabled}
       />
       <InputGroupItem
