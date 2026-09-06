@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import pool from "@/lib/db";
 import { z } from "zod";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 const updateLinkSchema = z.object({
   id: z.string().min(1, { message: "ID link tidak valid." }),
@@ -24,18 +25,6 @@ const updateLinkSchema = z.object({
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
   password: z.string().min(1, { message: "Password wajib diisi." }),
 });
-
-const getSupabaseServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || (!serviceRoleKey && !anonKey)) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey || anonKey || "");
-};
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -64,67 +53,63 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { message: "Konfigurasi Supabase di server belum lengkap." },
-        { status: 500 },
-      );
-    }
-
     const finalUrl = /^https?:\/\//i.test(urlAsli)
       ? urlAsli
       : `https://${urlAsli}`;
 
-    const { data: duplicate, error: duplicateError } = await supabase
-      .from("links")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .limit(1)
-      .maybeSingle();
+    // Cek duplikasi slug untuk ID lain
+    const [dupRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM links WHERE slug = ? AND id != ? LIMIT 1",
+      [slug, id]
+    );
 
-    if (duplicateError) {
-      return NextResponse.json(
-        { message: `Gagal memeriksa slug: ${duplicateError.message}` },
-        { status: 500 },
-      );
-    }
-
-    if (duplicate) {
+    if (dupRows.length > 0) {
       return NextResponse.json(
         { message: "Slug ini sudah digunakan. Silakan pilih slug lain." },
         { status: 409 },
       );
     }
 
-    const { data: updatedLink, error: updateError } = await supabase
-      .from("links")
-      .update({
-        slug,
-        url_asli: finalUrl,
-        lembaga,
-      })
-      .eq("id", id)
-      .select("id, lembaga, slug, url_asli, jumlah_klik, created_at")
-      .maybeSingle();
+    const [result] = await pool.query<ResultSetHeader>(
+      "UPDATE links SET slug = ?, url_asli = ?, lembaga = ? WHERE id = ?",
+      [slug, finalUrl, lembaga, id]
+    );
 
-    if (updateError) {
-      return NextResponse.json(
-        { message: `Gagal memperbarui link: ${updateError.message}` },
-        { status: 500 },
-      );
-    }
-
-    if (!updatedLink) {
+    if (result.affectedRows === 0) {
       return NextResponse.json(
         { message: "Data link tidak ditemukan atau tidak bisa diperbarui." },
         { status: 404 },
       );
     }
 
+    const [updatedRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id, lembaga, slug, url_asli, jumlah_klik, created_at FROM links WHERE id = ? LIMIT 1",
+      [id]
+    );
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json(
+        { message: "Data link tidak ditemukan setelah update." },
+        { status: 404 },
+      );
+    }
+
+    const row = updatedRows[0];
+    const updatedLink = {
+      id: row.id,
+      lembaga: row.lembaga,
+      slug: row.slug,
+      url_asli: row.url_asli,
+      jumlah_klik: row.jumlah_klik,
+      created_at:
+        row.created_at instanceof Date
+          ? row.created_at.toISOString()
+          : String(row.created_at),
+    };
+
     return NextResponse.json({ message: "Berhasil", link: updatedLink });
-  } catch {
+  } catch (error: any) {
+    console.error("Update link error:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server saat memproses update." },
       { status: 500 },

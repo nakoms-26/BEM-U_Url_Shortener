@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import pool from "@/lib/db";
 import { z } from "zod";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 const deleteLinkSchema = z.object({
   id: z.string().min(1, { message: "ID link tidak valid." }),
@@ -16,18 +17,6 @@ const deleteLinkSchema = z.object({
     .min(1, { message: "Konfirmasi slug wajib diisi." }),
   password: z.string().min(1, { message: "Password wajib diisi." }),
 });
-
-const getSupabaseServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || (!serviceRoleKey && !anonKey)) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey || anonKey || "");
-};
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -63,56 +52,40 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { message: "Konfigurasi Supabase di server belum lengkap." },
-        { status: 500 },
-      );
-    }
+    const [existingRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id, slug FROM links WHERE id = ? LIMIT 1",
+      [id]
+    );
 
-    const { data: existingLink, error: checkError } = await supabase
-      .from("links")
-      .select("id, slug")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (checkError) {
-      return NextResponse.json(
-        { message: `Gagal memeriksa data link: ${checkError.message}` },
-        { status: 500 },
-      );
-    }
-
-    if (!existingLink) {
+    if (!existingRows || existingRows.length === 0) {
       return NextResponse.json(
         { message: "Data link tidak ditemukan." },
         { status: 404 },
       );
     }
 
-    if (existingLink.slug !== slug) {
+    if (existingRows[0].slug !== slug) {
       return NextResponse.json(
         { message: "Slug tidak sesuai dengan data yang dipilih." },
         { status: 400 },
       );
     }
 
-    const { error: deleteError } = await supabase
-      .from("links")
-      .delete()
-      .eq("id", id)
-      .eq("slug", slug);
+    const [deleteResult] = await pool.query<ResultSetHeader>(
+      "DELETE FROM links WHERE id = ? AND slug = ?",
+      [id, slug]
+    );
 
-    if (deleteError) {
+    if (deleteResult.affectedRows === 0) {
       return NextResponse.json(
-        { message: `Gagal menghapus link: ${deleteError.message}` },
-        { status: 500 },
+        { message: "Gagal menghapus link atau data sudah tidak ada." },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ message: "Berhasil menghapus link." });
-  } catch {
+  } catch (error: any) {
+    console.error("Delete link error:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server saat memproses delete." },
       { status: 500 },

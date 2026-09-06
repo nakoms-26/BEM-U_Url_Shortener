@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import pool from "@/lib/db";
 import { z } from "zod";
+import crypto from "crypto";
 
 const createLinkSchema = z.object({
   urlAsli: z
@@ -23,18 +24,6 @@ const createLinkSchema = z.object({
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
   password: z.string().min(1, { message: "Password wajib diisi." }),
 });
-
-const getSupabaseServerClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || (!serviceRoleKey && !anonKey)) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey || anonKey || "");
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,28 +52,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { message: "Konfigurasi Supabase di server belum lengkap." },
-        { status: 500 },
-      );
-    }
-
     const finalUrl = /^https?:\/\//i.test(urlAsli)
       ? urlAsli
       : `https://${urlAsli}`;
 
-    const { error } = await supabase.from("links").insert([
-      {
-        url_asli: finalUrl,
-        slug,
-        lembaga,
-      },
-    ]);
+    const id = crypto.randomUUID();
 
-    if (error) {
-      if (error.code === "23505") {
+    try {
+      await pool.query(
+        "INSERT INTO links (id, url_asli, slug, lembaga, jumlah_klik) VALUES (?, ?, ?, ?, 0)",
+        [id, finalUrl, slug, lembaga]
+      );
+
+      return NextResponse.json({ message: "Berhasil membuat link." });
+    } catch (dbError: any) {
+      if (dbError.code === "ER_DUP_ENTRY") {
         return NextResponse.json(
           { message: "Slug ini sudah digunakan. Silakan pilih slug lain." },
           { status: 409 },
@@ -92,12 +74,10 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { message: `Gagal membuat link: ${error.message}` },
+        { message: `Gagal membuat link: ${dbError.message}` },
         { status: 500 },
       );
     }
-
-    return NextResponse.json({ message: "Berhasil membuat link." });
   } catch {
     return NextResponse.json(
       { message: "Terjadi kesalahan server saat memproses pembuatan link." },
