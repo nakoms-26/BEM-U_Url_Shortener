@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://unsoed.link"),
   title: "Url Shortner",
   description: "Short your Link ",
   openGraph: {

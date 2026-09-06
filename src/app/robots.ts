@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/database/"],
       },
     ],
-    sitemap: "https://www.bem-unsoed.com/sitemap.xml",
+    sitemap: "https://unsoed.link/sitemap.xml",
   };
 }

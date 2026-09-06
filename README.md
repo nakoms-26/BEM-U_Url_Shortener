@@ -9,7 +9,7 @@ Sebuah aplikasi pemendek URL (URL Shortener) profesional yang dirancang khusus u
 
 ## ✨ Fitur Utama
 
-- **🔗 Custom Slugs:** Buat tautan pendek dengan nama yang Anda inginkan (misal: `bem-unsoed.com/oprec`).
+- **🔗 Custom Slugs:** Buat tautan pendek dengan nama yang Anda inginkan (misal: `unsoed.link/oprec`).
 - **🛡️ Admin Verification:** Keamanan ekstra dengan sistem password untuk memastikan hanya admin yang berwenang yang dapat membuat tautan.
 - **💎 Glassmorphism UI:** Antarmuka modern dengan efek kaca yang elegan, dibangun menggunakan komponen kustom.
 - **📊 Click Tracking:** Melacak jumlah klik pada setiap tautan secara real-time.

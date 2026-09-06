@@ -18,7 +18,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 
 export default function QRCodeGeneratorPage() {
-  const [url, setUrl] = useState("BEM-Unsoed.com");
+  const [url, setUrl] = useState("https://unsoed.link");
   const [qrColor, setQrColor] = useState("#ffffff");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoSize, setLogoSize] = useState<{
@@ -29,6 +29,10 @@ export default function QRCodeGeneratorPage() {
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.origin) {
+      setUrl((prev) => (prev === "https://unsoed.link" ? window.location.origin : prev));
+    }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -107,7 +111,7 @@ export default function QRCodeGeneratorPage() {
                 <input
                   type="text"
                   className="w-full px-4 py-3 rounded-xl bg-white/6 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                  placeholder="bem-unsoed.com"
+                  placeholder="https://unsoed.link"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                 />

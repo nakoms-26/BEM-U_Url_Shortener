@@ -113,7 +113,8 @@ export default function ShortLinkForm() {
       setLoading(false);
       return;
     } else {
-      const fullUrl = `BEM-Unsoed.com/${pendingData.slug}`;
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const fullUrl = origin ? `${origin}/${pendingData.slug}` : `/${pendingData.slug}`;
 
       toast.custom(() => (
         <GlassNotification
