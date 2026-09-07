@@ -169,53 +169,49 @@ export default function ShortLinkForm() {
           )}
         </div>
 
-        {/* Grid 2 Kolom: Short URL & Lembaga */}
-        <div className="grid grid-cols-2 gap-4">
-          
-          {/* Short URL Widget */}
-          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
-            <Label htmlFor="slug" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Short URL
-            </Label>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-bold text-sm">/</span>
-              <input
-                id="slug"
-                type="text"
-                className="w-full bg-transparent text-slate-900 placeholder-slate-400 font-medium text-sm focus:outline-none"
-                placeholder="OprecS3"
-                {...register("slug")}
-              />
-            </div>
-            {errors.slug && (
-              <p className="text-[10px] text-red-500 font-medium mt-2 leading-tight">{errors.slug.message}</p>
-            )}
+        {/* Short URL Widget */}
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
+          <Label htmlFor="slug" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+            Short URL
+          </Label>
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-bold text-sm">/</span>
+            <input
+              id="slug"
+              type="text"
+              className="w-full bg-transparent text-slate-900 placeholder-slate-400 font-medium text-sm focus:outline-none"
+              placeholder="oprec-staff-s3-2025"
+              {...register("slug")}
+            />
           </div>
+          {errors.slug && (
+            <p className="text-[10px] text-red-500 font-medium mt-2 leading-tight">{errors.slug.message}</p>
+          )}
+        </div>
 
-          {/* Lembaga Widget */}
-          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all flex flex-col justify-center">
-            <Label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              Lembaga
-            </Label>
-            <GlassSelect onValueChange={(value) => setValue("lembaga", value)}>
-              <GlassSelectTrigger className="w-full px-0 py-0 h-auto border-0 bg-transparent shadow-none text-slate-900 font-medium text-sm focus:ring-0">
-                <GlassSelectValue placeholder="Pilih Lembaga" />
-              </GlassSelectTrigger>
-              <GlassSelectContent>
-                <GlassSelectGroup>
-                  <GlassSelectLabel>Kementerian / Biro</GlassSelectLabel>
-                  {LEMBAGA_LIST.map((lembaga) => (
-                    <GlassSelectItem key={lembaga} value={lembaga}>
-                      {lembaga}
-                    </GlassSelectItem>
-                  ))}
-                </GlassSelectGroup>
-              </GlassSelectContent>
-            </GlassSelect>
-            {errors.lembaga && (
-              <p className="text-[10px] text-red-500 font-medium mt-1 leading-tight">{errors.lembaga.message}</p>
-            )}
-          </div>
+        {/* Lembaga Widget */}
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
+          <Label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+            Lembaga
+          </Label>
+          <GlassSelect onValueChange={(value) => setValue("lembaga", value)}>
+            <GlassSelectTrigger className="w-full px-0 py-0 h-auto border-0 bg-transparent shadow-none text-slate-900 font-medium text-sm focus:ring-0">
+              <GlassSelectValue placeholder="Pilih kementerian atau biro" />
+            </GlassSelectTrigger>
+            <GlassSelectContent>
+              <GlassSelectGroup>
+                <GlassSelectLabel>Kementerian / Biro</GlassSelectLabel>
+                {LEMBAGA_LIST.map((lembaga) => (
+                  <GlassSelectItem key={lembaga} value={lembaga}>
+                    {lembaga}
+                  </GlassSelectItem>
+                ))}
+              </GlassSelectGroup>
+            </GlassSelectContent>
+          </GlassSelect>
+          {errors.lembaga && (
+            <p className="text-[10px] text-red-500 font-medium mt-2 leading-tight">{errors.lembaga.message}</p>
+          )}
         </div>
 
         {/* Generate Button */}

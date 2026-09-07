@@ -1,4 +1,4 @@
-import { ArrowUpRight, Instagram, Link2, QrCode, Database, BarChart3, Clock, Globe } from "lucide-react";
+import { ArrowUpRight, Link2, QrCode, Database, BarChart3, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -177,30 +177,58 @@ export default async function Hero() {
         </Link>
       </div>
 
-      {/* Top Links Section */}
+      {/* Top Links Section — Horizontal Carousel */}
       {topLinks.length > 0 && (
         <div className="mt-2">
           <div className="flex items-center justify-between mb-3 px-1">
             <h3 className="text-sm font-bold text-slate-900">Paling Banyak Diklik</h3>
             <Link href="/database" className="text-xs font-semibold text-violet-600">Lihat Semua</Link>
           </div>
-          <div className="flex flex-col gap-3">
-            {topLinks.map((link) => (
-              <div key={link.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-2.5 bg-slate-50 rounded-xl shrink-0">
-                    <Globe className="w-5 h-5 text-slate-400" />
+          <div
+            className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {topLinks.map((link, index) => (
+              <Link
+                key={link.id}
+                href="/database"
+                className="flex-shrink-0 w-52 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm snap-start active:scale-95 transition-all duration-200 hover:shadow-md hover:border-violet-200 flex flex-col gap-3"
+              >
+                {/* Title */}
+                <p className="text-[15px] font-extrabold text-slate-900 truncate leading-snug">
+                  /{link.slug}
+                </p>
+
+                {/* Klik count with icon */}
+                <div className="flex items-center gap-1.5">
+                  <div className={cn(
+                    "p-1 rounded-md",
+                    index === 0 ? "bg-amber-50" :
+                    index === 1 ? "bg-slate-50" :
+                    "bg-orange-50"
+                  )}>
+                    <TrendingUp className={cn(
+                      "w-3.5 h-3.5",
+                      index === 0 ? "text-amber-500" :
+                      index === 1 ? "text-slate-400" :
+                      "text-orange-400"
+                    )} />
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold text-slate-900 truncate">{link.slug}</span>
-                    <span className="text-[11px] font-medium text-slate-500 truncate">{link.lembaga || 'BEM Unsoed'}</span>
-                  </div>
+                  <span className={cn(
+                    "text-xs font-bold",
+                    index === 0 ? "text-amber-600" :
+                    index === 1 ? "text-slate-500" :
+                    "text-orange-500"
+                  )}>
+                    {link.jumlah_klik || 0} klik
+                  </span>
                 </div>
-                <div className="flex flex-col items-end shrink-0 pl-2">
-                  <span className="text-sm font-bold text-slate-900">{link.jumlah_klik || 0}</span>
-                  <span className="text-[10px] font-medium text-slate-500">Klik</span>
-                </div>
-              </div>
+
+                {/* Lembaga */}
+                <p className="text-xs text-slate-500 font-medium truncate leading-snug">
+                  {link.lembaga || 'BEM Unsoed'}
+                </p>
+              </Link>
             ))}
           </div>
         </div>
