@@ -2,8 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { GlassButton } from "@/components/ui/glass-button";
-import { Download } from "lucide-react";
+import { Download, Upload, Image as ImageIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   ColorPicker,
   ColorPickerArea,
@@ -92,118 +92,117 @@ export default function QRCodeGeneratorPage() {
   };
 
   return (
-    <div className="p-4 py-6">
-      <main className="w-full max-w-sm mx-auto">
-        <GlassCard className="w-full p-6">
-          <h1 className="text-xl font-bold text-center mb-5 text-slate-900">
-            Generate QR Code
-          </h1>
+    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24">
+      
+      {/* Input Section */}
+      <div className="flex flex-col gap-4">
+        
+        {/* URL Input */}
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
+          <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+            Target URL
+          </label>
+          <input
+            type="text"
+            className="w-full bg-transparent text-slate-900 placeholder-slate-400 font-medium text-sm focus:outline-none"
+            placeholder="https://nakoms.id/..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+        </div>
 
-          <div className="space-y-5 sm:space-y-6">
-            <div className="flex flex-col gap-3">
-              {/* Input URL */}
-              <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
-                  URL
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 h-10 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
-                  placeholder="https://unsoed.link"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
+        {/* Configurations Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          
+          {/* Logo Upload */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm flex flex-col justify-between">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+              Logo Tengah
+            </label>
+            <div className="relative overflow-hidden w-full h-11 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors flex items-center justify-center border border-slate-200">
+               <input
+                 type="file"
+                 accept="image/*"
+                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                 onChange={handleLogoUpload}
+               />
+               <span className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                 {logoUrl ? <ImageIcon className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                 {logoUrl ? "Ganti Logo" : "Upload"}
+               </span>
+            </div>
+            {logoUrl && (
+              <div className="mt-2.5 text-[10px] text-center text-slate-500 flex items-center justify-between px-1">
+                 <span className="truncate w-2/3 text-left font-medium">{logoName}</span>
+                 <button onClick={removeLogo} className="text-red-500 font-semibold hover:underline relative z-20">Hapus</button>
               </div>
-              <div className="flex flex-row gap-10">
-                {/* Input Logo (upload) */}
-                <div className="w-1/2 justify-start flex flex-col">
-                  <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
-                    Logo (Opsional)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="text-sm text-slate-500 file:bg-white file:border file:border-slate-300 file:text-slate-700 file:px-3 file:py-1.5 file:rounded-lg file:text-xs file:mr-2 cursor-pointer"
-                    onChange={handleLogoUpload}
-                  />
-                  {logoUrl && (
-                    <div className="mt-3 flex items-center gap-3">
-                      {/* <img
-                      src={logoUrl}
-                      alt="logo preview"
-                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-md object-cover border border-white/10"
-                    /> */}
-                      <div className="flex-1">
-                        <div className="text-sm text-slate-900">{logoName}</div>
-                        <button
-                          type="button"
-                          onClick={removeLogo}
-                          className="text-sm text-violet-600 underline mt-1"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {/* Input Warna */}
-                <div className="md:max-w-30">
-                  <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
-                    Warna QR Code
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <ColorPicker value={qrColor} onValueChange={setQrColor}>
-                      <ColorPickerTrigger className="w-16 h-10 rounded-lg overflow-hidden border-0 p-0 flex items-center justify-center bg-transparent">
-                        <ColorPickerSwatch className="w-full h-full rounded-lg" />
-                      </ColorPickerTrigger>
-                      <ColorPickerContent side="bottom">
-                        <ColorPickerArea />
-                        <ColorPickerEyeDropper />
-                        <ColorPickerHueSlider />
-                        <ColorPickerFormatSelect />
-                        <ColorPickerInput />
-                      </ColorPickerContent>
-                    </ColorPicker>
-                  </div>
-                </div>
-              </div>
+            )}
+          </div>
+
+          {/* Color Picker */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm flex flex-col justify-between">
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+              Warna QR
+            </label>
+            <div className="w-full flex justify-center pb-1">
+              <ColorPicker value={qrColor} onValueChange={setQrColor}>
+                <ColorPickerTrigger className="w-11 h-11 rounded-full shadow-inner border border-slate-200/50 p-0 flex items-center justify-center bg-transparent ring-2 ring-offset-2 ring-transparent focus:ring-violet-500 transition-all">
+                  <ColorPickerSwatch className="w-full h-full rounded-full" />
+                </ColorPickerTrigger>
+                <ColorPickerContent side="bottom">
+                  <ColorPickerArea />
+                  <ColorPickerEyeDropper />
+                  <ColorPickerHueSlider />
+                  <ColorPickerFormatSelect />
+                  <ColorPickerInput />
+                </ColorPickerContent>
+              </ColorPicker>
             </div>
           </div>
-          {/* Hasil QR Code */}
-          {url && (
-            <div className="mt-5 sm:mt-6 flex flex-col items-center space-y-4">
-              <div className="w-full flex items-center justify-center">
-                <div ref={qrRef} className="rounded-lg">
-                  <QRCodeCanvas
-                    value={url}
-                    size={180}
-                    bgColor={"#ffffff00"} // Transparan background
-                    fgColor={qrColor}
-                    level={"H"} // Level Error Correction 'H' (High) wajib jika pakai logo
-                    includeMargin={false}
-                    imageSettings={
-                      logoUrl && logoSize
-                        ? {
-                            src: logoUrl,
-                            x: undefined,
-                            y: undefined,
-                            height: logoSize.height,
-                            width: logoSize.width,
-                            excavate: true, // Membuat area kosong di tengah untuk logo
-                          }
-                        : undefined
-                    }
-                  />
-                </div>
-              </div>
 
-              <GlassButton className="lg:mt-3" onClick={downloadQRCode}>
-                Download PNG <Download className="ml-2" />
-              </GlassButton>
-            </div>
-          )}
-        </GlassCard>
-      </main>
+        </div>
+      </div>
+
+      {/* QR Code Result & Download */}
+      {url && (
+        <div className="mt-2 flex flex-col items-center gap-6">
+          <div className="w-full aspect-square bg-white border border-slate-200 shadow-sm rounded-[2rem] flex items-center justify-center p-8 relative overflow-hidden">
+             {/* Subtle pattern background for the card */}
+             <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]" />
+             
+             <div ref={qrRef} className="relative z-10 w-full h-full flex items-center justify-center">
+               <QRCodeCanvas
+                 value={url}
+                 size={240}
+                 bgColor={"#ffffff00"}
+                 fgColor={qrColor}
+                 level={"H"}
+                 includeMargin={false}
+                 style={{ width: "100%", height: "auto", maxWidth: "240px" }}
+                 imageSettings={
+                   logoUrl && logoSize
+                     ? {
+                         src: logoUrl,
+                         x: undefined,
+                         y: undefined,
+                         height: logoSize.height,
+                         width: logoSize.width,
+                         excavate: true,
+                       }
+                     : undefined
+                 }
+               />
+             </div>
+          </div>
+          
+          <button
+            onClick={downloadQRCode}
+            className="w-full py-4 rounded-full bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold shadow-[0_8px_20px_rgba(124,58,237,0.3)] transition-all flex items-center justify-center gap-2"
+          >
+            <Download className="w-5 h-5" /> Download QR Code
+          </button>
+        </div>
+      )}
     </div>
   );
 }
