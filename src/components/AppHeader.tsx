@@ -6,11 +6,11 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 
 const pageTitles: Record<string, string> = {
-  "/": "Beranda",
-  "/shortener": "Short Link",
-  "/qrgenerator": "QR Code",
-  "/database": "Database",
-  "/contact": "Kontak",
+  "/app": "Beranda",
+  "/app/shortener": "Short Link",
+  "/app/qrgenerator": "QR Code",
+  "/app/database": "Database",
+  "/app/contact": "Kontak",
 };
 
 export default function AppHeader() {
@@ -32,9 +32,9 @@ export default function AppHeader() {
         {title}
       </h1>
       
-      {pathname !== "/shortener" && (
+      {pathname !== "/app/shortener" && (
         <Link
-          href="/shortener"
+          href="/app/shortener"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
         >
           <Plus className="h-5 w-5 stroke-[2.5]" />

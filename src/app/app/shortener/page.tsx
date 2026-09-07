@@ -2,6 +2,6 @@
 
 import ShortLinkForm from "@/components/ShortLinkForm";
 
-export default function Shortener() {
+export default function AppsShortener() {
   return <ShortLinkForm />;
 }

@@ -6,11 +6,11 @@ import { Home, Database, ContactRound, Link as LinkIcon, QrCode } from "lucide-r
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { id: "home", icon: Home, label: "Home", href: "/" },
-  { id: "shortener", icon: LinkIcon, label: "Shortener", href: "/shortener" },
-  { id: "qr", icon: QrCode, label: "QR Code", href: "/qrgenerator" },
-  { id: "database", icon: Database, label: "Database", href: "/database" },
-  { id: "contact", icon: ContactRound, label: "Contact", href: "/contact" },
+  { id: "home", icon: Home, label: "Apps", href: "/app" },
+  { id: "shortener", icon: LinkIcon, label: "Shortener", href: "/app/shortener" },
+  { id: "qr", icon: QrCode, label: "QR Code", href: "/app/qrgenerator" },
+  { id: "database", icon: Database, label: "Database", href: "/app/database" },
+  { id: "contact", icon: ContactRound, label: "Contact", href: "/app/contact" },
 ];
 
 export default function Dock() {
@@ -18,7 +18,7 @@ export default function Dock() {
   const validPaths = navItems.map((item) => item.href);
 
   // Sembunyikan di halaman redirect [slug] dan 404
-  if (!validPaths.includes(pathname)) {
+  if (pathname !== "/app" && !pathname.startsWith("/app/")) {
     return null;
   }
 
@@ -39,7 +39,7 @@ export default function Dock() {
             key={id}
             href={href}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center gap-1 py-3",
+              "relative flex-1 flex flex-col items-center justify-center gap-1 py-3",
               "transition-colors duration-150 active:bg-slate-50",
               isActive ? "text-violet-700" : "text-slate-400",
             )}

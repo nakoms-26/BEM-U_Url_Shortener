@@ -43,6 +43,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Jalankan middleware di semua route kecuali static files & API internal
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
+  // Jalankan proxy di semua route kecuali static files, API internal, dan /apps
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/|app\).*)"],
 };

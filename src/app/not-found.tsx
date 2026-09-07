@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
-import { MessageCircle } from "lucide-react";
+import { Home } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -19,9 +19,9 @@ export default function NotFound() {
             </p>
           </div>
           <GlassButton asChild>
-            <Link href="https://instagram.com/nakomisme" className="inline-flex items-center gap-2">
-              <MessageCircle className="h-4! w-4!" /> Hubungi Developer
-            </Link>
+            {/* <Link href="/app" className="inline-flex items-center gap-2">
+              <Home className="h-4! w-4!" /> Kembali ke Beranda
+            </Link> */}
           </GlassButton>
         </GlassCard>
       </main>
