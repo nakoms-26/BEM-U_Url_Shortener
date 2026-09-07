@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import { Label } from "@/components/ui/label";
-import { GlassCard } from "@/components/ui/glass-card";
 import { useState } from "react";
 // 1. Import Zod dan React Hook Form
 import { z } from "zod";
@@ -17,8 +15,7 @@ import {
   GlassSelectTrigger,
   GlassSelectValue,
 } from "./glass-select";
-import { GlassInput } from "./ui/glass-input";
-import { GlassButton } from "./ui/glass-button";
+import { Link2 } from "lucide-react";
 import { LEMBAGA_LIST } from "@/lib/constants";
 import { toast } from "sonner";
 import { GlassNotification } from "./glass-notification";
@@ -152,106 +149,86 @@ export default function ShortLinkForm() {
   };
 
   return (
-    <>
-      <GlassCard className="p-8">
-        <div className="flex justify-center mb-4">
-          <Image
-            src="/KabinetKausaCipta.webp"
-            alt="BEM-U logo"
-            width={65}
-            height={12}
-            priority
-            className="brightness-0 opacity-80"
+    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        
+        {/* URL Asli Widget */}
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
+          <Label htmlFor="urlAsli" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+            URL Asli
+          </Label>
+          <input
+            id="urlAsli"
+            type="text"
+            className="w-full bg-transparent text-slate-900 placeholder-slate-400 font-medium text-sm focus:outline-none"
+            placeholder="https://contoh.com/artikel-sangat-panjang"
+            {...register("urlAsli")}
           />
+          {errors.urlAsli && (
+            <p className="text-[10px] text-red-500 font-medium mt-2">{errors.urlAsli.message}</p>
+          )}
         </div>
 
-        <div className="w-full space-y-6">
-          <h2 className="font-bold text-xl text-slate-900 text-center">
-            Buat Short Link
-          </h2>
-
-          {/* Hubungkan form dengan handleSubmit dari React Hook Form */}
-
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6 text-left"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="urlAsli" className="text-slate-700">URL Asli</Label>
-              <GlassInput
-                id="urlAsli"
+        {/* Grid 2 Kolom: Short URL & Lembaga */}
+        <div className="grid grid-cols-2 gap-4">
+          
+          {/* Short URL Widget */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
+            <Label htmlFor="slug" className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Short URL
+            </Label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400 font-bold text-sm">/</span>
+              <input
+                id="slug"
                 type="text"
-                placeholder="https://contoh.com/artikel-sangat-panjang"
-                {...register("urlAsli")} // Pengganti value & onChange
-                className={errors.urlAsli ? "border-red-500" : ""}
+                className="w-full bg-transparent text-slate-900 placeholder-slate-400 font-medium text-sm focus:outline-none"
+                placeholder="OprecS3"
+                {...register("slug")}
               />
-              {/* Tampilkan pesan error Zod jika ada */}
-              {errors.urlAsli && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.urlAsli.message}
-                </p>
-              )}
             </div>
+            {errors.slug && (
+              <p className="text-[10px] text-red-500 font-medium mt-2 leading-tight">{errors.slug.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="slug" className="text-slate-700">Short URL</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-sm font-mono">/</span>
-                <GlassInput
-                  id="slug"
-                  type="text"
-                  placeholder="OprecS32026"
-                  {...register("slug")} // Pengganti value & onChange
-                  className={errors.slug ? "border-red-500" : ""}
-                />
-              </div>
-              {/* Tampilkan pesan error Zod jika ada */}
-              {errors.slug && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.slug.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="Kementrian" className="text-slate-700">Lembaga</Label>
-              <GlassSelect
-                onValueChange={(value) => setValue("lembaga", value)}
-              >
-                <GlassSelectTrigger
-                  className={`w-full ${errors.lembaga ? "border-red-500" : ""}`}
-                >
-                  <GlassSelectValue placeholder="Pilih kementrian atau biro" />
-                </GlassSelectTrigger>
-                <GlassSelectContent>
-                  <GlassSelectGroup>
-                    <GlassSelectLabel>Kementerian / Biro</GlassSelectLabel>
-                    {LEMBAGA_LIST.map((lembaga) => (
-                      <GlassSelectItem key={lembaga} value={lembaga}>
-                        {lembaga}
-                      </GlassSelectItem>
-                    ))}
-                  </GlassSelectGroup>
-                </GlassSelectContent>
-              </GlassSelect>
-              {errors.lembaga && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.lembaga.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <GlassButton
-                variant="default"
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? "Generating..." : "Generate"}
-              </GlassButton>
-            </div>
-          </form>
+          {/* Lembaga Widget */}
+          <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all flex flex-col justify-center">
+            <Label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Lembaga
+            </Label>
+            <GlassSelect onValueChange={(value) => setValue("lembaga", value)}>
+              <GlassSelectTrigger className="w-full px-0 py-0 h-auto border-0 bg-transparent shadow-none text-slate-900 font-medium text-sm focus:ring-0">
+                <GlassSelectValue placeholder="Pilih Lembaga" />
+              </GlassSelectTrigger>
+              <GlassSelectContent>
+                <GlassSelectGroup>
+                  <GlassSelectLabel>Kementerian / Biro</GlassSelectLabel>
+                  {LEMBAGA_LIST.map((lembaga) => (
+                    <GlassSelectItem key={lembaga} value={lembaga}>
+                      {lembaga}
+                    </GlassSelectItem>
+                  ))}
+                </GlassSelectGroup>
+              </GlassSelectContent>
+            </GlassSelect>
+            {errors.lembaga && (
+              <p className="text-[10px] text-red-500 font-medium mt-1 leading-tight">{errors.lembaga.message}</p>
+            )}
+          </div>
         </div>
-      </GlassCard>
+
+        {/* Generate Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-4 w-full py-4 rounded-full bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold shadow-[0_8px_20px_rgba(124,58,237,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          <Link2 className="w-5 h-5" />
+          {loading ? "Membuat Link..." : "Generate Short Link"}
+        </button>
+
+      </form>
 
       {/* Dialog Password Admin */}
       <AdminPasswordDialog
@@ -266,6 +243,49 @@ export default function ShortLinkForm() {
         loadingLabel="Memproses..."
         loading={loading}
       />
-    </>
+
+      {/* How it works */}
+      <div className="mt-2">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">Cara Kerja</h3>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+              <span className="text-base font-black text-violet-600">1</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">Tempelkan URL panjang</p>
+              <p className="text-xs text-slate-500 mt-0.5">Salin URL asli dari browser atau dokumen Anda</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+              <span className="text-base font-black text-violet-600">2</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">Tentukan slug & lembaga</p>
+              <p className="text-xs text-slate-500 mt-0.5">Buat slug yang mudah diingat, misal: <code className="font-mono text-violet-600">OprecS3</code></p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+              <span className="text-base font-black text-violet-600">3</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">Bagikan short link!</p>
+              <p className="text-xs text-slate-500 mt-0.5">Link siap disebarkan ke sosial media BEM</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tips Card */}
+      <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex gap-3 items-start">
+        <div className="text-xl shrink-0">💡</div>
+        <div>
+          <p className="text-sm font-bold text-violet-900 mb-1">Tips Membuat Slug</p>
+          <p className="text-xs text-violet-700 leading-relaxed">Gunakan nama singkat yang relevan dengan kegiatan. Hindari spasi — gunakan strip (-) sebagai pengganti. Contoh: <code className="font-mono font-bold">oprec-s3-2025</code></p>
+        </div>
+      </div>
+    </div>
   );
 }
