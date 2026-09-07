@@ -31,6 +31,8 @@ export default async function RedirectPage({ params }: PageProps) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
 
+  let link: LinkRow | null = null;
+
   try {
     // 2. Cari di database MySQL: apakah ada slug yang cocok?
     const [rows] = await pool.query<LinkRow[]>(
@@ -38,38 +40,28 @@ export default async function RedirectPage({ params }: PageProps) {
       [slug]
     );
 
-    // 3. Jika data tidak ditemukan, tampilkan halaman 404
-    if (!rows || rows.length === 0) {
-      notFound();
+    if (rows && rows.length > 0) {
+      link = rows[0];
     }
-
-    const link = rows[0];
-
-    // Update jumlah klik secara asinkron
-    pool
-      .query("UPDATE links SET jumlah_klik = jumlah_klik + 1 WHERE slug = ?", [
-        slug,
-      ])
-      .catch((err) => {
-        console.error("Gagal update klik:", err);
-      });
-
-    // 4. Jika data ditemukan, lakukan REDIRECT ke URL Asli
-    redirect(link.url_asli);
   } catch (error) {
-    // Re-throw NEXT_REDIRECT or NEXT_NOT_FOUND errors used by next/navigation
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      typeof (error as { digest: string }).digest === "string" &&
-      ((error as { digest: string }).digest.startsWith("NEXT_REDIRECT") ||
-        (error as { digest: string }).digest.startsWith("NEXT_NOT_FOUND"))
-    ) {
-      throw error;
-    }
-
-    console.error("Database error:", error);
+    console.error("Database error saat query slug:", error);
     notFound();
   }
+
+  // 3. Jika slug tidak ditemukan di database, tampilkan 404
+  if (!link) {
+    notFound();
+  }
+
+  // 4. Update jumlah klik secara asinkron
+  pool
+    .query("UPDATE links SET jumlah_klik = jumlah_klik + 1 WHERE slug = ?", [
+      slug,
+    ])
+    .catch((err) => {
+      console.error("Gagal update klik:", err);
+    });
+
+  // 5. Jika data ditemukan, lakukan REDIRECT ke URL Asli
+  redirect(link.url_asli);
 }
