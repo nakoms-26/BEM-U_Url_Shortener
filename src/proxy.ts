@@ -33,7 +33,7 @@ function isSpamRequest(req: NextRequest): boolean {
   return false;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (isSpamRequest(req)) {
     // Kembalikan 403 Forbidden tanpa meneruskan ke server/database
     return new NextResponse("Forbidden", { status: 403 });
