@@ -14,6 +14,13 @@ import {
   ColorPickerSwatch,
   ColorPickerTrigger,
 } from "@/components/ui/color-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function QRCodeGeneratorPage() {
   const [url, setUrl] = useState("https://unsoed.link");
@@ -119,32 +126,34 @@ export default function QRCodeGeneratorPage() {
           {/* Style Pattern */}
           <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm flex flex-col">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Gaya Pattern</label>
-            <select
-              value={dotsType}
-              onChange={(e) => setDotsType(e.target.value as DotType)}
-              className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2 focus:outline-none focus:border-violet-500 cursor-pointer"
-            >
-              <option value="square">Kotak Klasik</option>
-              <option value="dots">Titik-Titik</option>
-              <option value="rounded">Rounded</option>
-              <option value="classy">Classy</option>
-              <option value="classy-rounded">Classy Rounded</option>
-              <option value="extra-rounded">Extra Rounded</option>
-            </select>
+            <Select value={dotsType} onValueChange={(val) => setDotsType(val as DotType)}>
+              <SelectTrigger className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 focus:ring-violet-500 focus:ring-offset-0 focus:outline-none">
+                <SelectValue placeholder="Pilih gaya pattern" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border border-slate-200 shadow-lg">
+                <SelectItem value="square" className="text-xs font-medium cursor-pointer">Kotak Klasik</SelectItem>
+                <SelectItem value="dots" className="text-xs font-medium cursor-pointer">Titik-Titik</SelectItem>
+                <SelectItem value="rounded" className="text-xs font-medium cursor-pointer">Rounded</SelectItem>
+                <SelectItem value="classy" className="text-xs font-medium cursor-pointer">Classy</SelectItem>
+                <SelectItem value="classy-rounded" className="text-xs font-medium cursor-pointer">Classy Rounded</SelectItem>
+                <SelectItem value="extra-rounded" className="text-xs font-medium cursor-pointer">Extra Rounded</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Style Corner */}
           <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm flex flex-col">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Sudut Mata</label>
-            <select
-              value={cornerType}
-              onChange={(e) => setCornerType(e.target.value as any)}
-              className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2 focus:outline-none focus:border-violet-500 cursor-pointer"
-            >
-              <option value="square">Kotak Klasik</option>
-              <option value="extra-rounded">Membulat</option>
-              <option value="dot">Titik (Dot)</option>
-            </select>
+            <Select value={cornerType} onValueChange={(val) => setCornerType(val as any)}>
+              <SelectTrigger className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 focus:ring-violet-500 focus:ring-offset-0 focus:outline-none">
+                <SelectValue placeholder="Pilih sudut mata" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border border-slate-200 shadow-lg">
+                <SelectItem value="square" className="text-xs font-medium cursor-pointer">Kotak Klasik</SelectItem>
+                <SelectItem value="extra-rounded" className="text-xs font-medium cursor-pointer">Membulat</SelectItem>
+                <SelectItem value="dot" className="text-xs font-medium cursor-pointer">Titik (Dot)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Logo Upload */}

@@ -39,7 +39,7 @@ export default function Dock() {
             key={id}
             href={href}
             className={cn(
-              "relative flex-1 flex flex-col items-center justify-center gap-1 py-3",
+              "relative flex-1 flex flex-col items-center justify-center gap-1.5 pt-4 pb-6",
               "transition-colors duration-150 active:bg-slate-50",
               isActive ? "text-violet-700" : "text-slate-400",
             )}
