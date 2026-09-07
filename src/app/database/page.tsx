@@ -1,11 +1,6 @@
 import { cookies } from "next/headers";
 import pool from "@/lib/db";
 import DatabaseClient from "@/components/DatabaseClient";
-import DatabaseAccessGate from "@/components/DatabaseAccessGate";
-import {
-  DATABASE_ACCESS_COOKIE_NAME,
-  hasDatabaseAccess,
-} from "@/lib/admin-auth";
 import { RowDataPacket } from "mysql2";
 
 export const dynamic = "force-dynamic";
@@ -21,12 +16,6 @@ interface LinkRow extends RowDataPacket {
 }
 
 export default async function Database() {
-  const cookieStore = await cookies();
-  const accessCookie = cookieStore.get(DATABASE_ACCESS_COOKIE_NAME)?.value;
-
-  if (!hasDatabaseAccess(accessCookie)) {
-    return <DatabaseAccessGate />;
-  }
 
   try {
     const [rows] = await pool.query<LinkRow[]>(
@@ -46,21 +35,14 @@ export default async function Database() {
     }));
 
     return (
-      <div
-        className="relative flex min-h-screen items-start sm:items-center justify-center
-               p-4 pt-10 sm:pt-4 overflow-hidden font-sans"
-      >
-        <div
-          className="absolute inset-0 z-10 bg-zinc-50/0 dark:bg-zinc-950/80
-                   pointer-events-none"
-        />
+      <div className="p-4 py-6">
         <DatabaseClient initialLinks={links} />
       </div>
     );
   } catch (error: any) {
     console.error("Gagal mengambil data dari MySQL:", error.message);
     return (
-      <div className="text-white text-center mt-20">Gagal memuat data.</div>
+      <div className="text-slate-900 text-center mt-20">Gagal memuat data.</div>
     );
   }
 }

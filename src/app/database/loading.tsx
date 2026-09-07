@@ -1,57 +1,34 @@
-import {
-  GlassTable,
-  GlassTableBody,
-  GlassTableCell,
-  GlassTableHeader,
-  GlassTableRow,
-  GlassTableHead,
-} from "@/components/glass-table";
-
 export default function Loading() {
   return (
-    <div
-      className="relative flex min-h-screen items-start sm:items-center justify-center
-             p-4 pt-10 sm:pt-4 overflow-hidden font-sans"
-    >
-      <div
-        className="absolute inset-0 z-10 bg-zinc-50/0 dark:bg-zinc-950/80
-                pointer-events-none"
-      />
-      <main className="w-full max-w-2xl relative z-20">
-        <GlassTable className="max-h-145 sm:max-h-120 opacity-50">
-          <GlassTableHeader>
-            <GlassTableRow>
-              <GlassTableHead className="w-px whitespace-nowrap">
-                Lembaga
-              </GlassTableHead>
-              <GlassTableHead>Slug</GlassTableHead>
-              <GlassTableHead className="text-right w-px whitespace-nowrap">
-                Kunjungan
-              </GlassTableHead>
-              <GlassTableHead className="w-px whitespace-nowrap">
-                Tanggal
-              </GlassTableHead>
-            </GlassTableRow>
-          </GlassTableHeader>
-          <GlassTableBody>
-            {[...Array(5)].map((_, i) => (
-              <GlassTableRow key={i} className="animate-pulse">
-                <GlassTableCell>
-                  <div className="h-4 w-20 bg-white/10 rounded" />
-                </GlassTableCell>
-                <GlassTableCell>
-                  <div className="h-8 w-full bg-white/10 rounded-lg" />
-                </GlassTableCell>
-                <GlassTableCell>
-                  <div className="h-4 w-8 bg-white/10 rounded ml-auto" />
-                </GlassTableCell>
-                <GlassTableCell>
-                  <div className="h-4 w-16 bg-white/10 rounded" />
-                </GlassTableCell>
-              </GlassTableRow>
-            ))}
-          </GlassTableBody>
-        </GlassTable>
+    <div className="flex flex-col flex-1 p-4 py-6 w-full max-w-2xl mx-auto">
+      <main className="w-full relative z-20">
+        {/* Search & Sort Bar Skeleton */}
+        <div className="flex gap-2 mb-3">
+          <div className="h-10 w-full rounded-xl bg-slate-200 animate-pulse" />
+          <div className="h-10 w-32 shrink-0 rounded-xl bg-slate-200 animate-pulse" />
+        </div>
+
+        {/* Link Count Skeleton */}
+        <div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-3 px-1" />
+
+        {/* Accordion List Skeleton */}
+        <div className="rounded-2xl border border-slate-200 bg-white/80 overflow-hidden divide-y divide-slate-200">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="w-full flex items-center gap-3 px-4 py-3.5 animate-pulse">
+              {/* Expand chevron placeholder */}
+              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-200" />
+
+              {/* Text placeholder */}
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-1/3 bg-slate-200 rounded mb-1.5" />
+                <div className="h-3 w-1/4 bg-slate-100 rounded" />
+              </div>
+
+              {/* Badge placeholder */}
+              <div className="w-12 h-4 rounded-md bg-slate-200 shrink-0" />
+            </div>
+          ))}
+        </div>
       </main>
     </div>
   );

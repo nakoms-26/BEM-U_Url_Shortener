@@ -6,9 +6,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const GlassSelect = SelectPrimitive.Root
-
 const GlassSelectGroup = SelectPrimitive.Group
-
 const GlassSelectValue = SelectPrimitive.Value
 
 const GlassSelectTrigger = React.forwardRef<
@@ -19,12 +17,10 @@ const GlassSelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-10 w-full items-center justify-between gap-2 rounded-xl px-4 py-2 text-sm",
-      "bg-white/10 backdrop-blur-xl border border-white/20",
-      "text-white placeholder:text-white/40",
-      "shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
-      "transition-all duration-300",
-      "focus:outline-none focus:border-white/40 focus:bg-white/15",
-      "focus:ring-2 focus:ring-cyan-400/30 focus:ring-offset-0",
+      "bg-white border border-slate-300",
+      "text-slate-900",
+      "transition-colors duration-150",
+      "focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400/30",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "[&>span]:line-clamp-1",
       className,
@@ -33,7 +29,7 @@ const GlassSelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-white/60" />
+      <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
@@ -48,7 +44,7 @@ const GlassSelectScrollUpButton = React.forwardRef<
     className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
-    <ChevronUp className="h-4 w-4 text-white/60" />
+    <ChevronUp className="h-4 w-4 text-slate-400" />
   </SelectPrimitive.ScrollUpButton>
 ))
 GlassSelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
@@ -62,7 +58,7 @@ const GlassSelectScrollDownButton = React.forwardRef<
     className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
-    <ChevronDown className="h-4 w-4 text-white/60" />
+    <ChevronDown className="h-4 w-4 text-slate-400" />
   </SelectPrimitive.ScrollDownButton>
 ))
 GlassSelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
@@ -75,16 +71,15 @@ const GlassSelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl",
-        "bg-white/10 backdrop-blur-2xl border border-white/20",
-        "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+        "relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-xl",
+        "bg-white border border-slate-200",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2",
-        "data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
-          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
       )}
       position={position}
@@ -112,7 +107,7 @@ const GlassSelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("px-2 py-1.5 text-sm font-semibold text-white/60", className)}
+    className={cn("px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider", className)}
     {...props}
   />
 ))
@@ -125,18 +120,20 @@ const GlassSelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm",
-      "text-white/80 outline-none",
-      "focus:bg-white/10 focus:text-white",
+      "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-8 pr-3 text-sm",
+      "text-slate-700 outline-none",
+      "hover:bg-slate-50 hover:text-slate-900",
+      "focus:bg-slate-50 focus:text-slate-900",
+      "data-[state=checked]:text-violet-700",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      "transition-colors duration-150",
+      "transition-colors duration-100",
       className,
     )}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-cyan-400" />
+        <Check className="h-4 w-4 text-violet-600" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -148,7 +145,7 @@ const GlassSelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <SelectPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-white/10", className)} {...props} />
+  <SelectPrimitive.Separator ref={ref} className={cn("-mx-1 my-1 h-px bg-slate-100", className)} {...props} />
 ))
 GlassSelectSeparator.displayName = SelectPrimitive.Separator.displayName
 

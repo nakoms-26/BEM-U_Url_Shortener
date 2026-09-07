@@ -50,13 +50,12 @@ export default function DatabaseAccessGate() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-start sm:items-center justify-center p-4 pt-10 sm:pt-4 overflow-hidden font-sans">
-      <div className="absolute inset-0 z-10 bg-zinc-50/0 dark:bg-zinc-950/80 pointer-events-none" />
-
-      <GlassCard className="relative z-20 flex flex-col backdrop-blur-md shadow-2xl rounded-3xl p-8 border w-full max-w-xl">
-        <div className="flex justify-center mb-3">
+    <div className="flex h-full min-h-full items-center justify-center p-4 py-6">
+      <div className="w-full max-w-xs">
+      <GlassCard className="p-8 w-full max-w-sm">
+        <div className="flex justify-center mb-4">
           <Image
-            className="dark:invert"
+            className="brightness-0 opacity-80"
             src="/KabinetKausaCipta.webp"
             alt="BEM-U logo"
             width={65}
@@ -64,19 +63,18 @@ export default function DatabaseAccessGate() {
             priority
           />
         </div>
-
-        <div className="w-full space-y-4 text-center sm:text-left">
-          <h2 className="font-bold text-2xl text-zinc-50 text-center">
-            Database Dilindungi
-          </h2>
-          <p className="text-sm text-white/70 text-center">
+        <div className="w-full space-y-4 text-center">
+          <h2 className="font-bold text-xl text-slate-900">Database Dilindungi</h2>
+          <p className="text-sm text-slate-500">
             Masukkan password admin untuk membuka halaman database.
           </p>
-          <div className="flex justify-center pt-2">
-            <GlassButton type="button" onClick={() => setIsDialogOpen(true)}>
-              Buka Verifikasi
-            </GlassButton>
-          </div>
+          <GlassButton
+            type="button"
+            onClick={() => setIsDialogOpen(true)}
+            className="w-full"
+          >
+            Buka Verifikasi
+          </GlassButton>
         </div>
       </GlassCard>
 
@@ -93,6 +91,7 @@ export default function DatabaseAccessGate() {
         loading={loading}
         inputId="database-admin-password"
       />
+      </div>
     </div>
   );
 }

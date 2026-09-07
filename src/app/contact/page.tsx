@@ -10,51 +10,45 @@ import {
   GlassCardHeader,
   GlassCardTitle,
 } from "@/components/ui/glass-card";
-import { PhoneCall } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { GlassButton } from "@/components/ui/glass-button";
-export default function Database() {
+
+export default function Contact() {
   return (
-    <div
-      className="relative flex min-h-screen items-start sm:items-center justify-center
-             p-4 pt-10 sm:pt-4 overflow-hidden font-sans"
-    >
-      <div
-        className="absolute inset-0 z-10 bg-zinc-50/0 dark:bg-zinc-950/80
-                pointer-events-none"
-      />
-      {/* LAYER 3: Form Utama (Paling Atas) */}
-      <main className="w-full max-w-sm  ">
-        <GlassCard className="">
-          <GlassCardHeader className="items-center">
-            <GlassAvatar className="h-16 w-16">
-              <GlassAvatarImage src="/Adminn.jpg" alt="User" />
+    <div className="flex h-full min-h-full items-center justify-center p-4 py-6">
+      <div className="w-full max-w-xs">
+        <GlassCard>
+          <GlassCardHeader className="items-center text-center">
+            <GlassAvatar className="h-20 w-20">
+              <GlassAvatarImage src="/Adminn.jpg" alt="Admin" />
               <GlassAvatarFallback>NAKOMS</GlassAvatarFallback>
             </GlassAvatar>
-            <GlassCardTitle className="mt-4">Siapa Yaaa</GlassCardTitle>
-            <GlassCardDescription className="text-center">
-              <span className="font-bold"> Kementrian Media Komunikasi </span>
+            <GlassCardTitle className="mt-4">Developer & Admin</GlassCardTitle>
+            <GlassCardDescription>
+              <span className="font-semibold text-slate-700">
+                Kementerian Media Komunikasi
+              </span>
               <br />
               Direktorat Jenderal Website
             </GlassCardDescription>
           </GlassCardHeader>
-          <GlassCardContent className="text-center ">
-            {" "}
-            <GlassButton
-              className=" text-base shadow-none"
-              size="lg"
-              variant="outline"
-            >
+          <GlassCardContent className="text-center pb-6">
+            <p className="text-slate-500 text-xs mb-4">
+              Temukan bug atau ada pertanyaan? Hubungi kami melalui Instagram.
+            </p>
+            <GlassButton asChild variant="outline" className="w-full">
               <a
                 href="https://www.instagram.com/nakomisme/"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex gap-2 items-center"
               >
-                <PhoneCall className="h-5! w-5!" /> Report Bug
+                <MessageCircle className="h-4! w-4!" /> Laporkan Kendala
               </a>
             </GlassButton>
           </GlassCardContent>
         </GlassCard>
-      </main>
+      </div>
     </div>
   );
 }

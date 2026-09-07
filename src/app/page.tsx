@@ -1,74 +1,241 @@
-"use client";
-import { ArrowUpRight, Instagram } from "lucide-react";
+import { ArrowUpRight, Instagram, Link2, QrCode, Database, BarChart3, Clock, Globe } from "lucide-react";
 import Link from "next/link";
-import { GlassBadge } from "@/components/ui/glass-badge";
-import { GlassButton } from "@/components/ui/glass-button";
-import BlurText from "@/components/BlurText";
 import Image from "next/image";
-export default function Hero() {
-  const handleAnimationComplete = () => {
-    console.log("Animation completed!");
-  };
-  return (
-    <div className="dark">
-      <div
-        className="flex min-h-screen items-start sm:items-center justify-center 
-  pt-30 sm:pt-0 scale-[0.87] sm:scale-100 origin-top"
-      >
-        <div className="relative z-10 max-w-4xl text-center  ">
-          <GlassBadge asChild className="rounded-full border-border py-1  ">
-            {/* <Link href="#" className="inline-flex items-center">
-              Just released v1.0.0 <ArrowUpRight className="ml-1 size-4" />
-            </Link> */}
-            <Image
-              src="/logobem.png"
-              alt="Description"
-              width={250}
-              height={250}
-              className="w-40 h-auto sm:w-62.5"
-            />
-          </GlassBadge>
-          <BlurText
-            text="Link Proker Kepanjangan? Singkatin Aja di Sini"
-            delay={200}
-            animateBy="words"
-            direction="top"
-            onAnimationComplete={handleAnimationComplete}
-            className="text-white/80 mt-6 font-bold  justify-center text-3xl tracking-tighter sm:text-5xl md:text-6xl md:leading-[1.2] lg:text-7xl"
-            animationFrom={undefined}
-            animationTo={undefined}
-          />
+import { cn } from "@/lib/utils";
+import pool from "@/lib/db";
+import { RowDataPacket } from "mysql2";
 
-          <p className="mt-6 text-foreground/80 md:text-lg">
-            Tingkatkan profesionalitas publikasi BEM Unsoed. Ubah URL Google
-            Drive atau Form yang panjang menjadi tautan pendek yang tepercaya
-            dan enak dilihat di setiap poster acara.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+interface LinkRow extends RowDataPacket {
+  id: string;
+  lembaga: string | null;
+  slug: string;
+  url_asli: string | null;
+  jumlah_klik: number | null;
+  created_at: Date;
+}
+
+interface CountRow extends RowDataPacket {
+  total: number;
+}
+interface ClickCountRow extends RowDataPacket {
+  totalClicks: number;
+}
+
+export default async function Hero() {
+  let totalLinks = 0;
+  let totalClicks = 0;
+  let topLinks: LinkRow[] = [];
+  let recentLinks: LinkRow[] = [];
+
+  try {
+    const [countRows] = await pool.query<CountRow[]>("SELECT COUNT(*) as total FROM links");
+    totalLinks = countRows[0]?.total || 0;
+
+    const [clickRows] = await pool.query<ClickCountRow[]>("SELECT SUM(jumlah_klik) as totalClicks FROM links");
+    totalClicks = clickRows[0]?.totalClicks || 0;
+
+    const [top] = await pool.query<LinkRow[]>(
+      "SELECT * FROM links ORDER BY jumlah_klik DESC LIMIT 3"
+    );
+    topLinks = top;
+
+    const [recent] = await pool.query<LinkRow[]>(
+      "SELECT * FROM links ORDER BY created_at DESC LIMIT 3"
+    );
+    recentLinks = recent;
+  } catch (error) {
+    console.error("Failed to fetch home stats:", error);
+  }
+
+  const formatDate = (dateStr: Date | string) => {
+    try {
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    } catch {
+      return "-";
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24">
+      {/* Header Sapaan */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Halo, Sobat Kata! <span className="text-xl">👋</span>
+          </h1>
+          <p className="text-sm font-medium text-slate-500">
+            URL Shortener BEM Unsoed
           </p>
-          <div className="mt-12 flex items-center justify-center gap-4">
-            <GlassButton size="lg" asChild>
-              <Link
-                href="/shortener"
-                className="inline-flex items-center gap-2"
-              >
-                Get Started <ArrowUpRight className="h-5! w-5!" />
-              </Link>
-            </GlassButton>
-            <GlassButton
-              className=" text-base shadow-none"
-              size="lg"
-              variant="outline"
-            >
-              <a
-                href="https://www.instagram.com/nakomisme/"
-                target="_blank"
-                className="inline-flex gap-2 items-center"
-              >
-                <Instagram className="h-5! w-5!" /> Nakoms Instagram
-              </a>
-            </GlassButton>
-          </div>
+        </div>
+        <div className="flex-shrink-0 rounded-2xl bg-white p-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100">
+          <Image
+            src="/logo.webp"
+            alt="Logo BEM"
+            width={40}
+            height={40}
+            className="w-10 h-10 object-contain"
+          />
         </div>
       </div>
+
+      {/* Overview Stats */}
+      <div className="flex gap-4 w-full">
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex-1 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-2xl font-black text-slate-900">{totalLinks}</span>
+            <div className="p-2 rounded-full bg-violet-50 text-violet-600">
+              <Link2 className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Link</span>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 flex-1 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-2xl font-black text-slate-900">{totalClicks || 0}</span>
+            <div className="p-2 rounded-full bg-emerald-50 text-emerald-600">
+              <BarChart3 className="w-4 h-4" />
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Klik</span>
+        </div>
+      </div>
+
+      {/* Widget Utama: Buat Short Link */}
+      <Link
+        href="/shortener"
+        className={cn(
+          "relative overflow-hidden group flex flex-col justify-between",
+          "w-full h-36 p-5 rounded-[2rem]",
+          "bg-violet-600",
+          "shadow-[0_12px_30px_rgba(124,58,237,0.3)]",
+          "transition-transform duration-200 active:scale-95"
+        )}
+      >
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl pointer-events-none" />
+
+        <div className="relative z-10 flex justify-between items-start">
+          <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md border border-white/20">
+            <Link2 className="w-6 h-6 text-white" strokeWidth={2.5} />
+          </div>
+          <div className="p-2 bg-black/10 rounded-full backdrop-blur-sm group-hover:bg-black/20 transition-colors">
+            <ArrowUpRight className="w-4 h-4 text-white" strokeWidth={3} />
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-auto">
+          <h2 className="text-xl font-bold text-white mb-0.5 tracking-wide">Buat Short Link</h2>
+          <p className="text-white/80 text-xs font-medium">Ubah URL panjang jadi rapi</p>
+        </div>
+      </Link>
+
+      {/* Widget Sekunder: Grid 2 Kolom */}
+      <div className="flex flex-row w-full gap-4">
+        {/* Generate QR */}
+        <Link
+          href="/qrgenerator"
+          className={cn(
+            "flex flex-col justify-between h-32 p-4 rounded-[1.5rem] w-1/2",
+            "bg-white border border-slate-200 shadow-sm",
+            "transition-all duration-200 active:scale-95 hover:border-slate-300 hover:shadow-md"
+          )}
+        >
+          <div className="p-2.5 bg-slate-50 w-fit rounded-xl border border-slate-100">
+            <QrCode className="w-5 h-5 text-slate-700" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm mb-0.5">QR Code</h3>
+            <p className="text-[10px] text-slate-500 font-medium leading-tight">Buat visual QR untuk poster</p>
+          </div>
+        </Link>
+
+        {/* Database */}
+        <Link
+          href="/database"
+          className={cn(
+            "flex flex-col justify-between h-32 p-4 rounded-[1.5rem] w-1/2",
+            "bg-white border border-slate-200 shadow-sm",
+            "transition-all duration-200 active:scale-95 hover:border-slate-300 hover:shadow-md"
+          )}
+        >
+          <div className="p-2.5 bg-slate-50 w-fit rounded-xl border border-slate-100">
+            <Database className="w-5 h-5 text-slate-700" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm mb-0.5">Database</h3>
+            <p className="text-[10px] text-slate-500 font-medium leading-tight">Kelola dan lihat data klik</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Top Links Section */}
+      {topLinks.length > 0 && (
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-sm font-bold text-slate-900">Paling Banyak Diklik</h3>
+            <Link href="/database" className="text-xs font-semibold text-violet-600">Lihat Semua</Link>
+          </div>
+          <div className="flex flex-col gap-3">
+            {topLinks.map((link) => (
+              <div key={link.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="p-2.5 bg-slate-50 rounded-xl shrink-0">
+                    <Globe className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-slate-900 truncate">{link.slug}</span>
+                    <span className="text-[11px] font-medium text-slate-500 truncate">{link.lembaga || 'BEM Unsoed'}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end shrink-0 pl-2">
+                  <span className="text-sm font-bold text-slate-900">{link.jumlah_klik || 0}</span>
+                  <span className="text-[10px] font-medium text-slate-500">Klik</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Links Section */}
+      {recentLinks.length > 0 && (
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-sm font-bold text-slate-900">Aktivitas Terbaru</h3>
+          </div>
+          <div className="flex flex-col gap-3">
+            {recentLinks.map((link) => (
+              <div key={link.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="p-2.5 bg-slate-50 rounded-xl shrink-0">
+                    <Clock className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-slate-900 truncate">{link.slug}</span>
+                    <span className="text-[11px] font-medium text-slate-500 truncate">{formatDate(link.created_at)}</span>
+                  </div>
+                </div>
+                <div className="shrink-0 pl-2">
+                  <Link href={`/database`} className="p-2 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-full transition-colors text-slate-600">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }

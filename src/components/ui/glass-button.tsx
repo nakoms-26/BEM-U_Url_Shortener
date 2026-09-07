@@ -7,51 +7,30 @@ import { Slot } from "@radix-ui/react-slot";
 
 const glassButtonVariants = cva(
   cn(
-    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full cursor-pointer",
-    "text-sm font-medium transition-all duration-300 ease-out",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
-    "disabled:pointer-events-none disabled:opacity-50",
-    "hover:scale-101 active:scale-99",
-    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 ",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl cursor-pointer",
+    "text-sm font-medium transition-colors duration-150",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50",
+    "disabled:pointer-events-none disabled:opacity-40",
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   ),
   {
     variants: {
       variant: {
-        default: cn(
-          "bg-white/20 backdrop-blur-xl border border-white/30 text-white",
-          "shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
-          "hover:bg-white/30 hover:border-white/40",
-          "before:absolute before:inset-0 before:rounded-xl",
-          "before:bg-linear-to-b before:from-white/20 before:to-transparent before:pointer-events-none",
-        ),
-        primary: cn(
-          "bg-linear-to-r from-[#a79dda]/80 via-[#514575]/80 to-[#201d39]/80",
-          "backdrop-blur-xl border border-white/30 text-white",
-          "shadow-[0_4px_20px_rgba(81,69,117,0.4)]",
-          "hover:shadow-[0_4px_30px_rgba(81,69,117,0.6)]",
-          "before:absolute before:inset-0 before:rounded-xl",
-          "before:bg-linear-to-b before:from-white/30 before:to-transparent before:pointer-events-none",
-        ),
-        outline: cn(
-          "bg-transparent backdrop-blur-sm border-2 border-white/40 text-white",
-          "hover:bg-white/10 hover:border-white/60",
-        ),
-        ghost: cn(
-          "bg-transparent text-white/70",
-          "hover:bg-white/10 hover:text-white",
-        ),
-        destructive: cn(
-          "bg-red-500/30 backdrop-blur-xl border border-red-400/40 text-red-100",
-          "shadow-[0_4px_16px_rgba(239,68,68,0.3)]",
-          "hover:bg-red-500/40 hover:border-red-400/60",
-          "before:absolute before:inset-0 before:rounded-xl",
-          "before:bg-linear-to-b before:from-white/10 before:to-transparent before:pointer-events-none",
-        ),
+        default:
+          "bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white shadow-sm",
+        primary:
+          "bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white shadow-sm",
+        outline:
+          "border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 shadow-sm",
+        ghost:
+          "bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-600 hover:text-slate-900",
+        destructive:
+          "bg-red-50 border border-red-200 hover:bg-red-100 active:bg-red-200 text-red-600",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-7 px-3 text-xs",
-        lg: "h-12 px-6 text-base",
+        sm: "h-8 px-3 text-xs rounded-lg",
+        lg: "h-11 px-6 text-base",
         icon: "h-10 w-10",
       },
     },
@@ -63,43 +42,23 @@ const glassButtonVariants = cva(
 );
 
 export interface GlassButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof glassButtonVariants> {
   glowEffect?: boolean;
   asChild?: boolean;
 }
 
 const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
-  (
-    {
-      className,
-      variant,
-      asChild = false,
-      size,
-      glowEffect = false,
-      children,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ className, variant, asChild = false, size, glowEffect: _glowEffect, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    const isFullWidth = className?.includes("w-full");
     return (
-      <div className={cn("relative", isFullWidth ? "w-full" : "inline-block")}>
-        {glowEffect && (
-          <div className="absolute -inset-1 rounded-xl bg-linear-to-r from-cyan-500/40 via-blue-500/40 to-purple-500/40 blur-lg opacity-70 transition-opacity group-hover:opacity-100" />
-        )}
-        <Comp
-          className={cn(glassButtonVariants({ variant, size, className }))}
-          ref={ref}
-          {...props}
-        >
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            {children}
-          </span>
-        </Comp>
-      </div>
+      <Comp
+        className={cn(glassButtonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </Comp>
     );
   },
 );

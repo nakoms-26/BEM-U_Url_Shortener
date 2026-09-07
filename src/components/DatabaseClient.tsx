@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  GlassTable,
-  GlassTableBody,
-  GlassTableCell,
-  GlassTableHeader,
-  GlassTableRow,
-  GlassTableHead,
-} from "@/components/glass-table";
-import CopyButton from "@/components/CopyButton";
 import { GlassInput } from "@/components/ui/glass-input";
 import { GlassButton } from "@/components/ui/glass-button";
 import {
@@ -35,6 +26,7 @@ import {
 } from "@/components/ui/glass-dialog";
 import { LEMBAGA_LIST } from "@/lib/constants";
 import { toast } from "sonner";
+
 
 interface Link {
   id: string;
@@ -92,6 +84,27 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
   const [previousUrlAsli, setPreviousUrlAsli] = useState("");
   const [selectedLembaga, setSelectedLembaga] = useState("");
   const [deleteConfirmationSlug, setDeleteConfirmationSlug] = useState("");
+  // Accordion state
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleCopyLink = async (e: React.MouseEvent, link: Link) => {
+    e.stopPropagation();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const fullUrl = origin ? `${origin}/${link.slug}` : `/${link.slug}`;
+    await navigator.clipboard.writeText(fullUrl);
+    setCopiedId(link.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
   const {
     register,
     handleSubmit,
@@ -284,18 +297,19 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
   }, [filteredLinks, sortOption]);
 
   return (
-    <main className="w-full max-w-2xl relative z-20">
-      <div className="flex gap-2 mb-4">
+    <main className="w-full relative z-20">
+      {/* Search & Sort Bar */}
+      <div className="flex gap-2 mb-3">
         <GlassInput
           type="text"
-          placeholder="Cari berdasarkan lembaga atau slug..."
+          placeholder="Cari lembaga atau slug..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"
         />
         <GlassSelect value={sortOption} onValueChange={setSortOption}>
-          <GlassSelectTrigger className="w-48">
-            <GlassSelectValue placeholder="Urutkan berdasarkan" />
+          <GlassSelectTrigger className="w-32 shrink-0">
+            <GlassSelectValue placeholder="Urut" />
           </GlassSelectTrigger>
           <GlassSelectContent>
             <GlassSelectItem value="waktu">Waktu</GlassSelectItem>
@@ -303,62 +317,161 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
           </GlassSelectContent>
         </GlassSelect>
       </div>
-      <GlassTable className="max-h-130 sm:max-h-120 ">
-        <GlassTableHeader>
-          <GlassTableRow>
-            <GlassTableHead className="w-px whitespace-nowrap">
-              Lembaga
-            </GlassTableHead>
-            <GlassTableHead>Slug</GlassTableHead>
-            <GlassTableHead className="text-right w-px whitespace-nowrap">
-              Kunjungan
-            </GlassTableHead>
-            <GlassTableHead className="w-px whitespace-nowrap">
-              Tanggal
-            </GlassTableHead>
-            <GlassTableHead className="w-px whitespace-nowrap text-center">
-              Aksi
-            </GlassTableHead>
-          </GlassTableRow>
-        </GlassTableHeader>
-        <GlassTableBody>
-          {sortedLinks?.map((link) => (
-            <GlassTableRow key={link.id}>
-              <GlassTableCell className="font-medium whitespace-nowrap">
-                {link.lembaga || "Umum"}
-              </GlassTableCell>
-              <GlassTableCell className="w-1 whitespace-nowrap">
-                <CopyButton slug={link.slug} />
-              </GlassTableCell>
-              <GlassTableCell className="text-right font-bold whitespace-nowrap">
-                {link.jumlah_klik || 0}
-              </GlassTableCell>
-              <GlassTableCell className="text-xs opacity-60 whitespace-nowrap">
-                {new Date(link.created_at).toLocaleDateString("id-ID")}
-              </GlassTableCell>
-              <GlassTableCell className="text-center">
-                <GlassButton
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenPasswordDialog(link)}
+
+      {/* Link Count */}
+      <p className="text-xs text-slate-500 mb-3 px-1">
+        {sortedLinks.length} link ditemukan
+      </p>
+
+      {/* Accordion List */}
+      <div className="rounded-2xl border border-slate-200 bg-white/80 overflow-hidden divide-y divide-slate-200">
+        {sortedLinks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+            <p className="text-sm">Tidak ada data yang cocok.</p>
+          </div>
+        ) : (
+          sortedLinks.map((link) => {
+            const isExpanded = expandedIds.has(link.id);
+            const isCopied = copiedId === link.id;
+            return (
+              <div key={link.id}>
+                {/* Collapsed Header Row */}
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(link.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors duration-100"
                 >
-                  Edit
-                </GlassButton>
-              </GlassTableCell>
-            </GlassTableRow>
-          ))}
-          {sortedLinks?.length === 0 && (
-            <GlassTableRow>
-              <GlassTableCell
-                colSpan={5}
-                className="text-center py-10 opacity-50"
-              >
-                Tidak ada data yang cocok.
-              </GlassTableCell>
-            </GlassTableRow>
-          )}
-        </GlassTableBody>
-      </GlassTable>
+                  {/* Expand chevron */}
+                  <div
+                    className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full transition-colors duration-150 ${
+                      isExpanded
+                        ? "bg-violet-600 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  {/* Slug */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate font-mono">
+                      /{link.slug}
+                    </p>
+                    {!isExpanded && (
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {link.lembaga || "Umum"} · {(link.jumlah_klik ?? 0).toLocaleString()} klik
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Lembaga badge (collapsed only) */}
+                  {!isExpanded && (
+                    <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-md px-1.5 py-0.5 uppercase tracking-wide shrink-0">
+                      {link.lembaga || "Umum"}
+                    </span>
+                  )}
+                </button>
+
+                {/* Expanded Detail */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 bg-slate-50/50">
+                    {/* Divider */}
+                    <div className="h-px bg-slate-200 mb-3" />
+
+                    {/* Key-Value Rows */}
+                    <div className="space-y-2.5 mb-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 w-20">Lembaga</span>
+                        <span className="text-[13px] text-slate-900 text-right">
+                          <span className="inline-block text-[10px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-md px-1.5 py-0.5 uppercase tracking-wide">
+                            {link.lembaga || "Umum"}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 w-20">Slug</span>
+                        <span className="text-[13px] text-slate-900 font-mono text-right break-all">{link.slug}</span>
+                      </div>
+
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 w-20">URL Asli</span>
+                        <span className="text-[12px] text-slate-500 text-right break-all line-clamp-2">{link.url_asli || "—"}</span>
+                      </div>
+
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 w-20">Kunjungan</span>
+                        <span className="text-[13px] font-semibold text-slate-900">{(link.jumlah_klik ?? 0).toLocaleString()} klik</span>
+                      </div>
+
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider shrink-0 w-20">Dibuat</span>
+                        <span className="text-[12px] text-slate-600">
+                          {new Date(link.created_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      {/* Copy Link */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyLink(e, link)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
+                          isCopied
+                            ? "bg-emerald-50 border border-emerald-200 text-emerald-600"
+                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
+                        }`}
+                      >
+                        {isCopied ? (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                        {isCopied ? "Tersalin!" : "Salin Link"}
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenPasswordDialog(link);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white transition-colors duration-150"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
 
       <GlassDialog
         open={isPasswordDialogOpen}
@@ -438,7 +551,7 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
 
             <div className="space-y-2">
               <Label htmlFor="edit-url-asli">Real URL</Label>
-              <p className="text-xs text-white/60 break-all">
+              <p className="text-xs text-slate-500 break-all">
                 Real URL sebelumnya: {previousUrlAsli || "(kosong)"}
               </p>
               <GlassInput
@@ -522,7 +635,7 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
             <GlassDialogTitle>Konfirmasi Hapus Link</GlassDialogTitle>
             <GlassDialogDescription>
               Untuk menghapus data, ketik slug berikut secara persis:
-              <span className="ml-1 font-semibold text-red-300 break-all">
+              <span className="ml-1 font-semibold text-red-500 break-all">
                 {selectedLink?.slug || "-"}
               </span>
             </GlassDialogDescription>

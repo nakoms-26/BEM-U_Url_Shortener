@@ -9,8 +9,9 @@ const GlassTable = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     className={cn(
-      "relative w-full overflow-auto rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xl  shadow-[0_8px_32px_rgba(0,0,0,0.2)]",
-      "no-scrollbar", // TAMBAHKAN INI
+      "relative w-full overflow-auto rounded-2xl border border-zinc-800 bg-zinc-900/80",
+      "shadow-[0_4px_24px_rgba(0,0,0,0.3)]",
+      "no-scrollbar",
       className,
     )}
   >
@@ -25,10 +26,7 @@ const GlassTableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn(
-      "[&_tr]:border-b border-white/10 relative z-30 backdrop-blur-2xl",
-      className,
-    )}
+    className={cn("[&_tr]:border-b [&_tr]:border-zinc-800", className)}
     {...props}
   />
 ));
@@ -53,7 +51,7 @@ const GlassTableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t border-white/10 bg-white/5 font-medium [&>tr]:last:border-b-0",
+      "border-t border-zinc-800 bg-zinc-900/50 font-medium [&>tr]:last:border-b-0",
       className,
     )}
     {...props}
@@ -68,8 +66,8 @@ const GlassTableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-white/10 transition-colors",
-      "hover:bg-white/5 data-[state=selected]:bg-white/10",
+      "border-b border-zinc-800/60 transition-colors duration-100",
+      "hover:bg-zinc-800/40 data-[state=selected]:bg-zinc-800/60",
       className,
     )}
     {...props}
@@ -84,8 +82,8 @@ const GlassTableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-bold text-black/50",
-      "sticky top-0 bg-[#c4bedd]/90   z-30 ",
+      "h-11 px-4 text-left align-middle text-xs font-semibold text-zinc-400 uppercase tracking-wider",
+      "sticky top-0 bg-zinc-900 z-30",
       "[&:has([role=checkbox])]:pr-0",
       className,
     )}
@@ -101,7 +99,7 @@ const GlassTableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "p-4 align-middle text-white/80 [&:has([role=checkbox])]:pr-0",
+      "p-4 align-middle text-zinc-300 [&:has([role=checkbox])]:pr-0",
       className,
     )}
     {...props}
@@ -115,7 +113,7 @@ const GlassTableCaption = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <caption
     ref={ref}
-    className={cn("mt-4 text-sm text-white/50", className)}
+    className={cn("mt-4 text-sm text-zinc-500", className)}
     {...props}
   />
 ));

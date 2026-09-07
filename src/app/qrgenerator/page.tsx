@@ -19,7 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 
 export default function QRCodeGeneratorPage() {
   const [url, setUrl] = useState("https://unsoed.link");
-  const [qrColor, setQrColor] = useState("#ffffff");
+  const [qrColor, setQrColor] = useState("#0f172a");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoSize, setLogoSize] = useState<{
     width: number;
@@ -92,12 +92,10 @@ export default function QRCodeGeneratorPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-start sm:items-center justify-center p-4 pt-10 sm:pt-4 overflow-hidden font-sans">
-      <div className="absolute inset-0 z-10 bg-zinc-50/0 pointer-events-none" />{" "}
-      {/* Kamu bisa ganti div ini dengan <GlassCard> milikmu */}
-      <main className="w-full max-w-sm  ">
-        <GlassCard className="my-auto w-full max-w-md rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl p-5 sm:p-8 lg:mb-25">
-          <h1 className="text-xl sm:text-2xl font-bold text-center mb-5 sm:mb-6 text-white">
+    <div className="p-4 py-6">
+      <main className="w-full max-w-sm mx-auto">
+        <GlassCard className="w-full p-6">
+          <h1 className="text-xl font-bold text-center mb-5 text-slate-900">
             Generate QR Code
           </h1>
 
@@ -105,12 +103,12 @@ export default function QRCodeGeneratorPage() {
             <div className="flex flex-col gap-3">
               {/* Input URL */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-white/90 mb-2">
+                <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
                   URL
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 rounded-xl bg-white/6 border border-white/10 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className="w-full px-4 py-2.5 h-10 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30"
                   placeholder="https://unsoed.link"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
@@ -119,13 +117,13 @@ export default function QRCodeGeneratorPage() {
               <div className="flex flex-row gap-10">
                 {/* Input Logo (upload) */}
                 <div className="w-1/2 justify-start flex flex-col">
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
                     Logo (Opsional)
                   </label>
                   <input
                     type="file"
                     accept="image/*"
-                    className=" text-sm text-white file:bg-transparent file:border file:border-white/10 file:px-3 file:py-2 rounded-lg cursor-pointer"
+                    className="text-sm text-slate-500 file:bg-white file:border file:border-slate-300 file:text-slate-700 file:px-3 file:py-1.5 file:rounded-lg file:text-xs file:mr-2 cursor-pointer"
                     onChange={handleLogoUpload}
                   />
                   {logoUrl && (
@@ -136,11 +134,11 @@ export default function QRCodeGeneratorPage() {
                       className="w-11 h-11 sm:w-12 sm:h-12 rounded-md object-cover border border-white/10"
                     /> */}
                       <div className="flex-1">
-                        <div className="text-sm text-white/90">{logoName}</div>
+                        <div className="text-sm text-slate-900">{logoName}</div>
                         <button
                           type="button"
                           onClick={removeLogo}
-                          className="text-sm text-cyan-300 underline mt-1"
+                          className="text-sm text-violet-600 underline mt-1"
                         >
                           Hapus
                         </button>
@@ -150,7 +148,7 @@ export default function QRCodeGeneratorPage() {
                 </div>
                 {/* Input Warna */}
                 <div className="md:max-w-30">
-                  <label className="block text-sm font-semibold text-white/90 mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
                     Warna QR Code
                   </label>
                   <div className="flex items-center gap-3">

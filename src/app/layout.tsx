@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Grainient from "@/components/background/Grainient";
 import Dock from "@/components/ui/Dock";
+import AppHeader from "@/components/AppHeader";
 import { Toaster } from "sonner";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,15 +17,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://unsoed.link"),
-  title: "Url Shortner",
-  description: "Short your Link ",
+  title: "URL Shortener — BEM Unsoed",
+  description:
+    "Persingkat URL Google Drive, Form, atau tautan panjang menjadi tautan pendek yang profesional untuk publikasi BEM Universitas Jenderal Soedirman.",
   openGraph: {
     images: [
       {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Url Shortner OG Image",
+        alt: "BEM Unsoed URL Shortener",
       },
     ],
   },
@@ -36,44 +38,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-dvh `}>
+    <html lang="id" className={`${geistSans.variable} h-dvh overflow-hidden`}>
       <body
-        // Tambahkan relative, h-full, dan overflow-hidden di sini juga
-        className={`${geistSans.variable} ${geistMono.variable} antialiased relative h-full overflow-hidden 
-       bg-zinc-950`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans h-full flex flex-col bg-slate-50 overflow-hidden`}
       >
-        {" "}
-        <div className="fixed inset-0 z-0">
-          <Grainient
-            color1="#a79dda"
-            color2="#201d39"
-            color3="#514575"
-            // color1="#FF9FFC" tiga ini warna aslinya
-            // color2="#5227FF"
-            // color3="#B19EEF"
-            timeSpeed={0}
-            colorBalance={0}
-            warpStrength={1}
-            warpFrequency={5}
-            warpSpeed={2}
-            warpAmplitude={50}
-            blendAngle={0}
-            blendSoftness={0.05}
-            rotationAmount={500}
-            noiseScale={2}
-            grainAmount={0.1}
-            grainScale={2}
-            grainAnimated={false}
-            contrast={1.5}
-            gamma={1}
-            saturation={1}
-            centerX={0}
-            centerY={0}
-            zoom={0.8}
-          />
+        {/* Light background: soft violet top glow */}
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 50% at 50% -5%, rgba(139,92,246,0.07) 0%, transparent 65%)",
+          }}
+        />
+
+        {/* Mobile App Shell */}
+        <div className="relative z-10 flex flex-col h-full overflow-hidden">
+          <AppHeader />
+          <main className="flex-1 overflow-y-auto no-scrollbar">
+            {children}
+          </main>
+          <Dock />
         </div>
-        {children} <Toaster position="top-center" richColors />
-        <Dock />
+
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

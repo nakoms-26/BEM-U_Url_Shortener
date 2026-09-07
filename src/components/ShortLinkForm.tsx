@@ -122,10 +122,10 @@ export default function ShortLinkForm() {
           title="Berhasil!"
           className="w-87.5"
           description={
-            <div className="space-y-3 mt-2">
-              <p className="text-white/70">Link Anda sudah siap.</p>
-              <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg border border-white/10 backdrop-blur-md">
-                <code className="flex-1 text-xs truncate text-white/90 px-1 font-mono">
+          <div className="space-y-3 mt-2">
+              <p className="text-slate-600">Link Anda sudah siap.</p>
+              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                <code className="flex-1 text-xs truncate text-slate-900 px-1 font-mono">
                   {fullUrl}
                 </code>
                 <button
@@ -133,7 +133,7 @@ export default function ShortLinkForm() {
                     navigator.clipboard.writeText(fullUrl);
                     toast.success("Copied!", { id: "copy-success" });
                   }}
-                  className="h-8 text-xs px-3 bg-white/20 hover:bg-white/30 text-white rounded-md font-medium transition-all border border-white/10"
+                  className="h-8 text-xs px-3 bg-white hover:bg-slate-100 text-slate-700 rounded-md font-medium transition-all border border-slate-200 shadow-sm"
                 >
                   Copy
                 </button>
@@ -153,24 +153,21 @@ export default function ShortLinkForm() {
 
   return (
     <>
-      <GlassCard
-        className="flex flex-col  backdrop-blur-md
-       shadow-2xl rounded-3xl p-8 border "
-      >
-        <div className="flex justify-center mb-3">
+      <GlassCard className="p-8">
+        <div className="flex justify-center mb-4">
           <Image
-            className="dark:invert"
             src="/KabinetKausaCipta.webp"
             alt="BEM-U logo"
             width={65}
             height={12}
             priority
+            className="brightness-0 opacity-80"
           />
         </div>
 
-        <div className="w-full space-y-6 text-center sm:text-left">
-          <h2 className="font-bold text-2xl text-zinc-50 dark:text-zinc-50 text-center">
-            Generate Short Link
+        <div className="w-full space-y-6">
+          <h2 className="font-bold text-xl text-slate-900 text-center">
+            Buat Short Link
           </h2>
 
           {/* Hubungkan form dengan handleSubmit dari React Hook Form */}
@@ -180,7 +177,7 @@ export default function ShortLinkForm() {
             className="space-y-6 text-left"
           >
             <div className="space-y-2">
-              <Label htmlFor="urlAsli">Real URL</Label>
+              <Label htmlFor="urlAsli" className="text-slate-700">URL Asli</Label>
               <GlassInput
                 id="urlAsli"
                 type="text"
@@ -197,9 +194,9 @@ export default function ShortLinkForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">Short URL</Label>
+              <Label htmlFor="slug" className="text-slate-700">Short URL</Label>
               <div className="flex items-center gap-2">
-                <span className="text-white  text-sm">/</span>
+                <span className="text-slate-400 text-sm font-mono">/</span>
                 <GlassInput
                   id="slug"
                   type="text"
@@ -216,7 +213,7 @@ export default function ShortLinkForm() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="Kementrian">Lembaga</Label>
+              <Label htmlFor="Kementrian" className="text-slate-700">Lembaga</Label>
               <GlassSelect
                 onValueChange={(value) => setValue("lembaga", value)}
               >
