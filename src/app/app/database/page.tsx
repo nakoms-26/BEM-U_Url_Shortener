@@ -56,7 +56,7 @@ export default async function Database() {
     }));
 
     return (
-      <div className="p-4 py-6">
+      <div className="flex flex-col min-h-full px-6 py-4 md:py-6 max-w-md mx-auto w-full gap-5 pb-24">
         <DatabaseClient initialLinks={links} />
       </div>
     );

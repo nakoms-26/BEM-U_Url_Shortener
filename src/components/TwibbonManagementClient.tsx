@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { TwibbonItem } from "@/lib/twibbon-schemas";
-import { GlassButton } from "@/components/ui/glass-button";
 import { GlassInput } from "@/components/ui/glass-input";
 import { CreateTwibbonDialog } from "@/components/CreateTwibbonDialog";
 import { EditTwibbonDialog } from "@/components/EditTwibbonDialog";
@@ -24,9 +23,6 @@ import {
   Check,
   RefreshCw,
   Lock,
-  ShieldCheck,
-  LogOut,
-  KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +84,22 @@ export default function TwibbonManagementClient({
     }
   };
 
+  useEffect(() => {
+    const syncAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/status");
+        if (res.ok) {
+          const data = await res.json();
+          setIsSuperAdmin(!!data.isSuperAdmin);
+          await refreshData();
+        }
+      } catch {}
+    };
+
+    window.addEventListener("auth-changed", syncAuth);
+    return () => window.removeEventListener("auth-changed", syncAuth);
+  }, []);
+
   const handleSuperAdminLogin = async () => {
     if (!loginPassword) {
       toast.error("Password wajib diisi.");
@@ -108,16 +120,19 @@ export default function TwibbonManagementClient({
       }
 
       if (data.role !== "SUPER_ADMIN") {
-        throw new Error("Hanya Super Admin yang berwenang mengelola Twibbon.");
+        throw new Error("Hanya Nakomisme yang berwenang mengelola Twibbon.");
       }
 
       setIsSuperAdmin(true);
       setIsLoginDialogOpen(false);
       setLoginPassword("");
-      toast.success("Login Super Admin berhasil! Seluruh kontrol twibbon terbuka.");
+      toast.success("Login Nakomisme berhasil! Seluruh kontrol twibbon terbuka.");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-changed"));
+      }
       await refreshData();
     } catch (err: any) {
-      toast.error(err.message || "Gagal masuk sebagai Super Admin.");
+      toast.error(err.message || "Gagal masuk sebagai Nakomisme.");
     } finally {
       setLoginLoading(false);
     }
@@ -127,7 +142,10 @@ export default function TwibbonManagementClient({
     try {
       await fetch("/api/auth/logout", { method: "POST" });
       setIsSuperAdmin(false);
-      toast.success("Keluar dari mode Super Admin. Menampilkan twibbon terpublikasi.");
+      toast.success("Keluar dari mode Nakomisme. Menampilkan twibbon terpublikasi.");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-changed"));
+      }
       await refreshData();
     } catch {
       toast.error("Gagal keluar.");
@@ -162,165 +180,90 @@ export default function TwibbonManagementClient({
   }, [twibbons, searchTerm, filterType, filterStatus, isSuperAdmin]);
 
   return (
-    <div className="flex flex-col min-h-full px-4 md:px-6 py-6 max-w-5xl mx-auto w-full gap-6 pb-28">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-1.5 rounded-lg bg-violet-100 text-violet-700">
-              <Sparkles className="w-5 h-5" />
+    <div className="flex flex-col min-h-full px-6 py-4 md:py-6 max-w-md mx-auto w-full gap-5 pb-24">
+      {/* Button Buat Twibbon (Super Admin) */}
+      {isSuperAdmin && (
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="w-full py-3.5 rounded-full bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs md:text-sm shadow-[0_8px_20px_rgba(124,58,237,0.3)] transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>Buat Twibbon Baru</span>
+        </button>
+      )}
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xl font-black text-slate-900">{stats.total}</span>
+            <div className="p-1.5 rounded-full bg-violet-50 text-violet-600">
+              <Sparkles className="w-3.5 h-3.5" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Twibbon BEM Unsoed
-            </h1>
           </div>
-          <p className="text-xs md:text-sm font-medium text-slate-500">
-            {isSuperAdmin
-              ? "Mode Super Admin: Kelola seluruh kampanye twibbon foto & video"
-              : "Katalog Publik: Menampilkan twibbon yang sedang aktif dan terpublikasi"}
-          </p>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            {isSuperAdmin ? "Total" : "Aktif"}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xl font-black text-slate-900">{stats.active}</span>
+            <div className="p-1.5 rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Publik
+          </span>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xl font-black text-slate-900">{stats.totalDownloads.toLocaleString()}</span>
+            <div className="p-1.5 rounded-full bg-amber-50 text-amber-600">
+              <Download className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Unduhan
+          </span>
+        </div>
+      </div>
+
+      {/* Search & Filter Controls */}
+      <div className="flex flex-col gap-2.5">
+        {/* Search & Refresh */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <GlassInput
+              placeholder="Cari judul twibbon atau slug..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 text-xs bg-white h-10 rounded-xl"
+            />
+          </div>
           <button
+            type="button"
             onClick={refreshData}
             disabled={isRefreshing}
-            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-sm"
+            className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs shrink-0"
             title="Muat Ulang Data"
           >
-            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+            <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
           </button>
-
-          {isSuperAdmin ? (
-            <div className="flex items-center gap-2">
-              <GlassButton
-                type="button"
-                onClick={() => setIsCreateOpen(true)}
-                className="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-md shadow-violet-500/20"
-              >
-                <Plus className="w-4 h-4" strokeWidth={2.5} />
-                <span>+ Buat Twibbon</span>
-              </GlassButton>
-
-              <button
-                onClick={handleLogout}
-                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all shadow-sm"
-                title="Keluar dari Super Admin"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <GlassButton
-              type="button"
-              onClick={() => setIsLoginDialogOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs md:text-sm flex items-center gap-1.5 shadow-md shadow-amber-500/20"
-            >
-              <Lock className="w-4 h-4" />
-              <span>Masuk Super Admin</span>
-            </GlassButton>
-          )}
-        </div>
-      </div>
-
-      {/* Role State Indicator */}
-      <div
-        className={cn(
-          "flex items-center justify-between p-3 rounded-2xl border text-xs font-semibold",
-          isSuperAdmin
-            ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-            : "bg-slate-100 border-slate-200 text-slate-700"
-        )}
-      >
-        <div className="flex items-center gap-2">
-          {isSuperAdmin ? (
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          ) : (
-            <Lock className="w-4 h-4 text-slate-500" />
-          )}
-          <span>
-            {isSuperAdmin
-              ? "Akses Super Admin Aktif: Anda dapat membuat, mengedit, dan menghapus twibbon."
-              : "Mode Publik: Hanya menampilkan twibbon yang terpublikasi."}
-          </span>
-        </div>
-        {!isSuperAdmin && (
-          <button
-            onClick={() => setIsLoginDialogOpen(true)}
-            className="text-xs font-bold text-violet-700 hover:underline flex items-center gap-1"
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Buka Akses Pengelolaan</span>
-          </button>
-        )}
-      </div>
-
-      {/* Overview Stats Cards */}
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {/* Total Twibbon */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl md:text-2xl font-black text-slate-900">{stats.total}</span>
-            <div className="p-1.5 md:p-2 rounded-xl bg-violet-50 text-violet-600">
-              <Sparkles className="w-4 h-4" />
-            </div>
-          </div>
-          <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">
-            {isSuperAdmin ? "Total Kampanye" : "Twibbon Aktif"}
-          </span>
-        </div>
-
-        {/* Twibbon Aktif */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl md:text-2xl font-black text-slate-900">{stats.active}</span>
-            <div className="p-1.5 md:p-2 rounded-xl bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Terpublikasi
-          </span>
-        </div>
-
-        {/* Total Download */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl md:text-2xl font-black text-slate-900">
-              {stats.totalDownloads.toLocaleString()}
-            </span>
-            <div className="p-1.5 md:p-2 rounded-xl bg-amber-50 text-amber-600">
-              <Download className="w-4 h-4" />
-            </div>
-          </div>
-          <span className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Total Unduhan
-          </span>
-        </div>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-        {/* Search Input */}
-        <div className="relative w-full md:max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-          <GlassInput
-            placeholder="Cari judul twibbon atau slug..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 text-xs md:text-sm bg-white"
-          />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 no-scrollbar">
-          {/* Tipe Filter */}
-          <div className="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+          <div className="flex items-center p-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold shadow-xs">
             <button
               onClick={() => setFilterType("ALL")}
               className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                filterType === "ALL" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                filterType === "ALL" ? "bg-violet-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
               )}
             >
               Semua
@@ -328,31 +271,30 @@ export default function TwibbonManagementClient({
             <button
               onClick={() => setFilterType("IMAGE")}
               className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                filterType === "IMAGE" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                filterType === "IMAGE" ? "bg-violet-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
               )}
             >
-              Gambar
+              Foto
             </button>
             <button
               onClick={() => setFilterType("VIDEO")}
               className={cn(
-                "px-2.5 py-1 rounded-lg transition-all",
-                filterType === "VIDEO" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                filterType === "VIDEO" ? "bg-violet-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
               )}
             >
               Video
             </button>
           </div>
 
-          {/* Status Filter (Hanya untuk Super Admin) */}
           {isSuperAdmin && (
-            <div className="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+            <div className="flex items-center p-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold shadow-xs">
               <button
                 onClick={() => setFilterStatus("ALL")}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg transition-all",
-                  filterStatus === "ALL" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                  filterStatus === "ALL" ? "bg-slate-800 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
                 )}
               >
                 Status
@@ -360,8 +302,8 @@ export default function TwibbonManagementClient({
               <button
                 onClick={() => setFilterStatus("ACTIVE")}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg transition-all",
-                  filterStatus === "ACTIVE" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                  filterStatus === "ACTIVE" ? "bg-emerald-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
                 )}
               >
                 Aktif
@@ -369,8 +311,8 @@ export default function TwibbonManagementClient({
               <button
                 onClick={() => setFilterStatus("INACTIVE")}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg transition-all",
-                  filterStatus === "INACTIVE" ? "bg-white text-red-700 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  "px-2.5 py-1 rounded-lg transition-all text-[11px]",
+                  filterStatus === "INACTIVE" ? "bg-red-600 text-white shadow-xs" : "text-slate-500 hover:text-slate-900"
                 )}
               >
                 Nonaktif
@@ -380,52 +322,37 @@ export default function TwibbonManagementClient({
         </div>
       </div>
 
-      {/* Twibbons Grid */}
+      {/* Twibbon Feed */}
       {filteredTwibbons.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8" />
+        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-8 text-center shadow-sm space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto">
+            <Sparkles className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-1">
-            {searchTerm || filterType !== "ALL" || filterStatus !== "ALL"
-              ? "Tidak ada twibbon yang cocok"
-              : "Belum ada kampanye twibbon terpublikasi"}
-          </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
-            {searchTerm || filterType !== "ALL" || filterStatus !== "ALL"
-              ? "Coba ubah kata kunci pencarian atau sesuaikan filter Anda."
-              : isSuperAdmin
-              ? "Mulai buat kampanye pertama Anda dengan mengunggah frame twibbon."
-              : "Belum ada twibbon yang terpublikasi saat ini."}
-          </p>
-          {isSuperAdmin ? (
-            <GlassButton
-              type="button"
-              onClick={() => setIsCreateOpen(true)}
-              className="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs"
-            >
-              + Buat Twibbon Baru
-            </GlassButton>
-          ) : (
-            <GlassButton
-              type="button"
-              onClick={() => setIsLoginDialogOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs"
-            >
-              Masuk Super Admin
-            </GlassButton>
-          )}
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 mb-1">
+              {searchTerm || filterType !== "ALL" || filterStatus !== "ALL"
+                ? "Tidak ada twibbon yang cocok"
+                : "Belum ada kampanye twibbon"}
+            </h3>
+            <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+              {searchTerm || filterType !== "ALL" || filterStatus !== "ALL"
+                ? "Coba ubah kata kunci pencarian atau sesuaikan filter Anda."
+                : isSuperAdmin
+                ? "Mulai buat kampanye pertama Anda dengan mengunggah frame twibbon."
+                : "Belum ada frame twibbon yang terpublikasi saat ini."}
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
           {filteredTwibbons.map((twibbon) => (
             <div
               key={twibbon.id}
-              className="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3 group"
+              className="group bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-3 shadow-xs hover:border-slate-300 hover:shadow-sm transition-all flex flex-col justify-between"
             >
               <div>
-                {/* Header Card: Thumbnail + Badges */}
-                <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 mb-3 flex items-center justify-center">
+                {/* Thumbnail Container (4:5 Ratio) with Badges */}
+                <div className="relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center mb-2.5">
                   {twibbon.thumbnail ? (
                     <Image
                       src={
@@ -435,20 +362,20 @@ export default function TwibbonManagementClient({
                       }
                       alt={twibbon.title}
                       fill
-                      className="object-contain p-2"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, 240px"
                       unoptimized
                     />
                   ) : (
-                    <div className="text-slate-300 font-bold text-3xl">BEM</div>
+                    <div className="text-slate-300 font-bold text-xl">BEM</div>
                   )}
 
                   {/* Top Badges */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                  <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
                     {isSuperAdmin && (
                       <span
                         className={cn(
-                          "text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md backdrop-blur-md border",
+                          "text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full backdrop-blur-md border shadow-2xs",
                           twibbon.isActive
                             ? "bg-emerald-500/90 text-white border-emerald-400/40"
                             : "bg-red-500/90 text-white border-red-400/40"
@@ -460,63 +387,58 @@ export default function TwibbonManagementClient({
 
                     <span
                       className={cn(
-                        "text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md backdrop-blur-md border",
+                        "text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full backdrop-blur-md border shadow-2xs",
                         twibbon.type === "VIDEO"
                           ? "bg-purple-600/90 text-white border-purple-400/40"
                           : "bg-blue-600/90 text-white border-blue-400/40"
                       )}
                     >
-                      {twibbon.type === "VIDEO" ? "Video" : "Gambar"}
+                      {twibbon.type === "VIDEO" ? "Video" : "Foto"}
                     </span>
                   </div>
 
-                  {/* Downloads count pill */}
-                  <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1 border border-white/20">
-                    <Download className="w-3 h-3" />
+                  {/* Downloads count */}
+                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[9px] font-bold flex items-center gap-1 border border-white/20">
+                    <Download className="w-2.5 h-2.5" />
                     <span>{(twibbon.downloadsCount || 0).toLocaleString()}</span>
                   </div>
                 </div>
 
                 {/* Title & Slug */}
-                <h3 className="font-extrabold text-slate-900 text-base leading-snug line-clamp-1 mb-1">
+                <h3
+                  className="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 mb-1"
+                  title={twibbon.title}
+                >
                   {twibbon.title}
                 </h3>
-
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                  <span className="font-mono text-violet-700 font-bold">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2">
+                  <span className="font-mono text-violet-700 font-bold truncate max-w-[85px] sm:max-w-[110px]">
                     /{twibbon.slug}
                   </span>
                   <button
                     onClick={() => handleCopyLink(twibbon.slug)}
-                    className="p-1 rounded-md text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                    className="p-1 rounded-md text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors shrink-0"
                     title="Salin Tautan"
                   >
                     {copiedSlug === twibbon.slug ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <Check className="w-3 h-3 text-emerald-600" />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3 h-3" />
                     )}
                   </button>
                 </div>
-
-                {/* Description snippet */}
-                {twibbon.description && (
-                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mb-1">
-                    {twibbon.description}
-                  </p>
-                )}
               </div>
 
-              {/* Actions Footer */}
-              <div className="border-t border-slate-100 pt-3 flex items-center gap-1.5 mt-auto">
+              {/* Footer Actions */}
+              <div className="border-t border-slate-100 pt-2 flex items-center gap-1 mt-auto">
                 <a
                   href={`${publicBaseUrl}/${twibbon.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-2 px-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold text-center flex items-center justify-center gap-1 transition-all"
+                  className="flex-1 py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold text-center flex items-center justify-center gap-1 transition-all active:scale-95 shadow-2xs"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Lihat</span>
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                  <span className="truncate">Buka</span>
                 </a>
 
                 {isSuperAdmin && (
@@ -527,10 +449,10 @@ export default function TwibbonManagementClient({
                         setSelectedTwibbon(twibbon);
                         setIsEditOpen(true);
                       }}
-                      className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-violet-50 hover:text-violet-700 text-slate-600 transition-all"
+                      className="p-1.5 rounded-xl border border-slate-200 bg-white hover:bg-violet-50 hover:text-violet-700 text-slate-600 transition-all shadow-2xs shrink-0"
                       title="Edit Kampanye"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-3 h-3" />
                     </button>
 
                     <button
@@ -539,10 +461,10 @@ export default function TwibbonManagementClient({
                         setSelectedTwibbon(twibbon);
                         setIsDeleteOpen(true);
                       }}
-                      className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 text-slate-600 transition-all"
+                      className="p-1.5 rounded-xl border border-slate-200 bg-white hover:bg-red-50 hover:text-red-600 text-slate-600 transition-all shadow-2xs shrink-0"
                       title="Hapus Kampanye"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </>
                 )}
@@ -552,42 +474,40 @@ export default function TwibbonManagementClient({
         </div>
       )}
 
-      {/* Dialogs */}
-      {isSuperAdmin && (
-        <>
-          <CreateTwibbonDialog
-            open={isCreateOpen}
-            onOpenChange={setIsCreateOpen}
-            onSuccess={refreshData}
-          />
+      {/* Dialog Buat Twibbon */}
+      <CreateTwibbonDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onSuccess={refreshData}
+      />
 
-          <EditTwibbonDialog
-            open={isEditOpen}
-            onOpenChange={setIsEditOpen}
-            twibbon={selectedTwibbon}
-            onSuccess={refreshData}
-          />
+      {/* Dialog Edit Twibbon */}
+      <EditTwibbonDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        twibbon={selectedTwibbon}
+        onSuccess={refreshData}
+      />
 
-          <DeleteTwibbonDialog
-            open={isDeleteOpen}
-            onOpenChange={setIsDeleteOpen}
-            twibbon={selectedTwibbon}
-            onSuccess={refreshData}
-          />
-        </>
-      )}
+      {/* Dialog Hapus Twibbon */}
+      <DeleteTwibbonDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        twibbon={selectedTwibbon}
+        onSuccess={refreshData}
+      />
 
-      {/* Super Admin Login Dialog */}
+      {/* Dialog Password Nakomisme */}
       <AdminPasswordDialog
         open={isLoginDialogOpen}
         onOpenChange={setIsLoginDialogOpen}
         password={loginPassword}
         onPasswordChange={setLoginPassword}
         onConfirm={handleSuperAdminLogin}
-        title="Masuk Super Admin"
-        description="Masukkan password Super Admin untuk membuka fitur pembuatan dan pengelolaan Twibbon."
+        title="Masuk Akun Nakomisme"
+        description="Masukkan password Nakomisme untuk mengelola frame twibbon BEM Unsoed."
         confirmLabel="Masuk"
-        loadingLabel="Memverifikasi..."
+        loadingLabel="Memeriksa..."
         loading={loginLoading}
       />
     </div>

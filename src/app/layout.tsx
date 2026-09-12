@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Dock from "@/components/ui/Dock";
 import AppHeader from "@/components/AppHeader";
+import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -15,11 +16,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#7c3aed",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://unsoed.link"),
-  title: "URL Shortener — BEM Unsoed",
+  title: "URL Shortener & Portal — BEM Unsoed",
   description:
     "Persingkat URL Google Drive, Form, atau tautan panjang menjadi tautan pendek yang profesional untuk publikasi BEM Universitas Jenderal Soedirman.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BEM Unsoed",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-icon.png",
+  },
   openGraph: {
     images: [
       {
@@ -59,6 +77,7 @@ export default function RootLayout({
             {children}
           </main>
           <Dock />
+          <InstallPwaPrompt />
         </div>
 
         <Toaster position="top-center" richColors />

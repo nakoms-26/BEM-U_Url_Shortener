@@ -367,7 +367,7 @@ export function CreateTwibbonDialog({
                     {layerFile ? layerFile.name : "Pilih file frame..."}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {layerFile ? formatBytes(layerFile.size) : "Disarankan 1080x1080"}
+                    {layerFile ? formatBytes(layerFile.size) : "Disarankan 1080x1350 (4:5)"}
                   </span>
                 </div>
               </div>
@@ -396,7 +396,7 @@ export function CreateTwibbonDialog({
                     {thumbnailFile ? thumbnailFile.name : "Pilih gambar thumbnail..."}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {thumbnailFile ? formatBytes(thumbnailFile.size) : "Rasio 1:1 persegi"}
+                    {thumbnailFile ? formatBytes(thumbnailFile.size) : "Rasio 4:5 (portrait)"}
                   </span>
                 </div>
               </div>

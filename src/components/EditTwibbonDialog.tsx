@@ -340,12 +340,12 @@ export function EditTwibbonDialog({
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold text-slate-600">Ganti Thumbnail</Label>
                 <div className="flex items-center gap-3">
-                  <div className="relative w-14 h-14 rounded-xl border overflow-hidden bg-white shrink-0">
+                  <div className="relative w-12 aspect-[4/5] rounded-xl border overflow-hidden bg-slate-100 shrink-0">
                     <Image
                       src={twibbon.thumbnail}
                       alt={twibbon.title}
                       fill
-                      className="object-contain p-1"
+                      className="object-cover"
                       unoptimized
                     />
                   </div>

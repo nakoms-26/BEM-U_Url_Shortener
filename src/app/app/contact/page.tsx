@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function Contact() {
   return (
-    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24 items-center justify-center">
+    <div className="flex flex-col min-h-full px-6 py-4 md:py-6 max-w-md mx-auto w-full gap-6 pb-24 items-center justify-center">
 
       <div className="w-full bg-white border border-slate-200 shadow-sm rounded-[2rem] p-8 text-center flex flex-col items-center relative overflow-hidden">
 

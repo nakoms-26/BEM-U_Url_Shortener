@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({
         success: true,
         role: "SUPER_ADMIN",
-        message: "Berhasil masuk sebagai Super Admin.",
+        message: "Berhasil masuk sebagai Nakomisme.",
       });
 
       if (superToken) {
@@ -75,14 +75,14 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // 2. Cek Admin Biasa
+    // 2. Cek Admin Biasa (Staf Kabinet)
     if (adminPassword && password === adminPassword) {
       const adminToken = getDatabaseAccessToken();
 
       const response = NextResponse.json({
         success: true,
         role: "ADMIN",
-        message: "Berhasil masuk sebagai Admin.",
+        message: "Berhasil masuk sebagai Staf Kabinet.",
       });
 
       if (adminToken) {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: "Password salah. Silakan periksa kembali." },
+      { message: "Password salah. Masukkan password Staf Kabinet atau Nakomisme." },
       { status: 401 }
     );
   } catch {

@@ -104,7 +104,7 @@ export default function QRCodeGeneratorPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24">
+    <div className="flex flex-col min-h-full px-6 py-4 md:py-6 max-w-md mx-auto w-full gap-5 pb-24">
       {/* Input Section */}
       <div className="flex flex-col gap-4">
 

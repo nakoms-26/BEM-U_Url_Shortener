@@ -1,7 +1,7 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,12 +12,11 @@ import {
   GlassSelectTrigger,
   GlassSelectValue,
 } from "./glass-select";
-import { Link2, Lock, ShieldCheck, LogOut } from "lucide-react";
+import { Link2, Lock } from "lucide-react";
 import { LEMBAGA_LIST } from "@/lib/constants";
 import { toast } from "sonner";
 import { GlassNotification } from "./glass-notification";
 import { AdminPasswordDialog } from "./AdminPasswordDialog";
-import { GlassButton } from "./ui/glass-button";
 import { useRouter } from "next/navigation";
 
 // Skema Validasi Zod
@@ -71,6 +70,21 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
     },
   });
 
+  useEffect(() => {
+    const syncAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/status");
+        if (res.ok) {
+          const data = await res.json();
+          setIsLoggedIn(!!data.isAdmin || !!data.isSuperAdmin);
+        }
+      } catch {}
+    };
+
+    window.addEventListener("auth-changed", syncAuth);
+    return () => window.removeEventListener("auth-changed", syncAuth);
+  }, []);
+
   // Login handler
   const handleAdminLogin = async () => {
     if (!adminPassword) {
@@ -95,6 +109,9 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
       setIsPasswordDialogOpen(false);
       setAdminPassword("");
       toast.success(data.message || "Login berhasil! Tombol generate kini aktif.");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-changed"));
+      }
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Gagal melakukan verifikasi.");
@@ -108,6 +125,9 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
       await fetch("/api/auth/logout", { method: "POST" });
       setIsLoggedIn(false);
       toast.success("Anda telah keluar. Tombol generate dinonaktifkan.");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth-changed"));
+      }
       router.refresh();
     } catch {
       toast.error("Gagal keluar.");
@@ -189,48 +209,7 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
   };
 
   return (
-    <div className="flex flex-col min-h-full px-6 py-8 md:py-12 max-w-md mx-auto w-full gap-6 pb-24">
-      {/* Status Auth Banner */}
-      <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              isLoggedIn ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-            }`}
-          >
-            {isLoggedIn ? <ShieldCheck className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-800">
-              {isLoggedIn ? "Status: Admin Aktif" : "Status: Belum Login"}
-            </p>
-            <p className="text-[10px] text-slate-500">
-              {isLoggedIn
-                ? "Tombol generate aktif & siap digunakan"
-                : "Tombol generate dinonaktifkan"}
-            </p>
-          </div>
-        </div>
-
-        {isLoggedIn ? (
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="Keluar"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        ) : (
-          <GlassButton
-            type="button"
-            onClick={() => setIsPasswordDialogOpen(true)}
-            className="text-xs font-bold py-1.5 px-3 bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
-          >
-            Masuk
-          </GlassButton>
-        )}
-      </div>
-
+    <div className="flex flex-col min-h-full px-6 py-4 md:py-6 max-w-md mx-auto w-full gap-5 pb-24">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* URL Asli Widget */}
         <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/20 focus-within:border-violet-500 transition-all">
@@ -315,41 +294,31 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
             {loading ? "Membuat Link..." : "Generate Short Link"}
           </button>
         ) : (
-          <div className="space-y-3 mt-4">
+          <div className="space-y-2 mt-4">
             <button
               type="button"
-              disabled
-              className="w-full py-4 rounded-full bg-slate-200/90 text-slate-400 font-bold border border-slate-300/80 cursor-not-allowed flex items-center justify-center gap-2"
+              onClick={() => setIsPasswordDialogOpen(true)}
+              className="w-full py-4 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold border border-slate-200 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
-              <Lock className="w-4 h-4" />
-              <span>Generate Short Link (Off — Belum Login)</span>
+              <Lock className="w-4 h-4 text-slate-400" />
+              <span>Masuk Staf Kabinet untuk Generate</span>
             </button>
-
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-center space-y-2">
-              <p className="text-xs text-amber-800 font-medium">
-                🔒 Masuk dengan password admin untuk mengaktifkan tombol generate shortlink.
-              </p>
-              <GlassButton
-                type="button"
-                onClick={() => setIsPasswordDialogOpen(true)}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm"
-              >
-                Masuk sebagai Admin
-              </GlassButton>
-            </div>
+            <p className="text-[11px] text-center text-slate-400 font-medium">
+              Tombol generate dinonaktifkan. Masuk sebagai Staf Kabinet melalui header atau klik tombol di atas.
+            </p>
           </div>
         )}
       </form>
 
-      {/* Dialog Password Admin */}
+      {/* Dialog Password Staf Kabinet */}
       <AdminPasswordDialog
         open={isPasswordDialogOpen}
         onOpenChange={setIsPasswordDialogOpen}
         password={adminPassword}
         onPasswordChange={setAdminPassword}
         onConfirm={handleAdminLogin}
-        title="Login Admin"
-        description="Masukkan password admin (atau super admin) untuk mengaktifkan pembuatan link."
+        title="Login Staf Kabinet"
+        description="Masukkan password Staf Kabinet (atau Nakomisme) untuk mengaktifkan pembuatan link."
         confirmLabel="Masuk"
         loadingLabel="Memverifikasi..."
         loading={loginLoading}

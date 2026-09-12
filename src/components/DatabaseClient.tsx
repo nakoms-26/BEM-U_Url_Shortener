@@ -297,7 +297,7 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
   }, [filteredLinks, sortOption]);
 
   return (
-    <main className="w-full relative z-20">
+    <div className="w-full relative z-20 space-y-3">
       {/* Search & Sort Bar */}
       <div className="flex gap-2 mb-3">
         <GlassInput
@@ -678,6 +678,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
           </GlassDialogFooter>
         </GlassDialogContent>
       </GlassDialog>
-    </main>
+    </div>
   );
 }
