@@ -1,8 +1,8 @@
-import { ArrowUpRight, Link2, QrCode, Database, BarChart3, Clock, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Link2, QrCode, Database, BarChart3, Clock, TrendingUp, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import pool from "@/lib/db";
+import pool, { twibbonPool } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +48,22 @@ export default async function Hero() {
     recentLinks = recent;
   } catch (error) {
     console.error("Failed to fetch home stats:", error);
+  }
+
+  let totalTwibbons = 0;
+  let totalTwibbonDownloads = 0;
+  try {
+    const [tCount] = await twibbonPool.query<CountRow[]>(
+      "SELECT COUNT(*) as total FROM twibbon"
+    );
+    totalTwibbons = tCount[0]?.total || 0;
+
+    const [tDownloads] = await twibbonPool.query<ClickCountRow[]>(
+      "SELECT SUM(downloadsCount) as totalClicks FROM twibbon"
+    );
+    totalTwibbonDownloads = tDownloads[0]?.totalClicks || 0;
+  } catch (error) {
+    console.error("Failed to fetch twibbon stats:", error);
   }
 
   const formatDate = (dateStr: Date | string) => {
@@ -135,6 +151,42 @@ export default async function Hero() {
         <div className="relative z-10 mt-auto">
           <h2 className="text-xl font-bold text-white mb-0.5 tracking-wide">Buat Short Link</h2>
           <p className="text-white/80 text-xs font-medium">Ubah URL panjang jadi rapi</p>
+        </div>
+      </Link>
+
+      {/* Widget Twibbon BEM */}
+      <Link
+        href="/app/twibbons"
+        className={cn(
+          "relative overflow-hidden group flex flex-col justify-between",
+          "w-full h-36 p-5 rounded-[2rem]",
+          "bg-gradient-to-r from-violet-900 via-indigo-900 to-amber-950 text-white",
+          "border border-white/10 shadow-[0_12px_30px_rgba(76,29,149,0.25)]",
+          "transition-transform duration-200 active:scale-95"
+        )}
+      >
+        <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-28 h-28 bg-violet-400/20 rounded-full blur-xl pointer-events-none" />
+
+        <div className="relative z-10 flex justify-between items-start">
+          <div className="p-3 bg-white/15 rounded-2xl backdrop-blur-md border border-white/20">
+            <Sparkles className="w-6 h-6 text-amber-300" strokeWidth={2.5} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 backdrop-blur-md">
+              {totalTwibbons} Kampanye
+            </span>
+            <div className="p-2 bg-black/20 rounded-full backdrop-blur-sm group-hover:bg-black/30 transition-colors">
+              <ArrowUpRight className="w-4 h-4 text-white" strokeWidth={3} />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-auto">
+          <h2 className="text-xl font-bold text-white mb-0.5 tracking-wide">Twibbon BEM</h2>
+          <p className="text-white/80 text-xs font-medium">
+            Kelola template frame foto & video ({totalTwibbonDownloads.toLocaleString()} unduhan)
+          </p>
         </div>
       </Link>
 

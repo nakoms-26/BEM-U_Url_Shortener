@@ -1,10 +1,22 @@
 import { cookies } from "next/headers";
 import pool from "@/lib/db";
 import DatabaseClient from "@/components/DatabaseClient";
+import DatabaseSkeletonView from "@/components/DatabaseSkeletonView";
 import { RowDataPacket } from "mysql2";
+import {
+  DATABASE_ACCESS_COOKIE_NAME,
+  SUPER_ADMIN_COOKIE_NAME,
+  hasDatabaseAccess,
+} from "@/lib/admin-auth";
+import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: "Database Link — BEM Unsoed",
+  description: "Kelola database tautan pendek dan pantau statistik klik tautan BEM Unsoed.",
+};
 
 interface LinkRow extends RowDataPacket {
   id: string;
@@ -16,6 +28,15 @@ interface LinkRow extends RowDataPacket {
 }
 
 export default async function Database() {
+  const cookieStore = await cookies();
+  const adminCookie = cookieStore.get(DATABASE_ACCESS_COOKIE_NAME)?.value;
+  const superCookie = cookieStore.get(SUPER_ADMIN_COOKIE_NAME)?.value;
+  const isAuthed = hasDatabaseAccess(adminCookie, superCookie);
+
+  // Jika belum login, tampilkan skeleton view
+  if (!isAuthed) {
+    return <DatabaseSkeletonView />;
+  }
 
   try {
     const [rows] = await pool.query<LinkRow[]>(
@@ -42,7 +63,7 @@ export default async function Database() {
   } catch (error: any) {
     console.error("Gagal mengambil data dari MySQL:", error.message);
     return (
-      <div className="text-slate-900 text-center mt-20">Gagal memuat data.</div>
+      <div className="text-slate-900 text-center mt-20">Gagal memuat data database.</div>
     );
   }
 }

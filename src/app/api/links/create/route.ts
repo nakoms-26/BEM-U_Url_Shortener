@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { z } from "zod";
 import crypto from "crypto";
+import {
+  DATABASE_ACCESS_COOKIE_NAME,
+  SUPER_ADMIN_COOKIE_NAME,
+  hasDatabaseAccess,
+} from "@/lib/admin-auth";
 
 const createLinkSchema = z.object({
   urlAsli: z
@@ -22,7 +27,7 @@ const createLinkSchema = z.object({
       message: "Slug hanya boleh berisi huruf, angka, dan strip (-).",
     }),
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
-  password: z.string().min(1, { message: "Password wajib diisi." }),
+  password: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -37,17 +42,19 @@ export async function POST(request: NextRequest) {
 
     const { urlAsli, slug, lembaga, password } = parsed.data;
     const expectedPassword = process.env.ADMIN_EDIT_PASSWORD;
+    const expectedSuperPassword = process.env.SUPER_ADMIN_EDIT_PASSWORD;
 
-    if (!expectedPassword) {
-      return NextResponse.json(
-        { message: "ADMIN_EDIT_PASSWORD belum dikonfigurasi." },
-        { status: 500 },
-      );
-    }
+    const adminCookie = request.cookies.get(DATABASE_ACCESS_COOKIE_NAME)?.value;
+    const superCookie = request.cookies.get(SUPER_ADMIN_COOKIE_NAME)?.value;
+    const isAuthedByCookie = hasDatabaseAccess(adminCookie, superCookie);
 
-    if (password !== expectedPassword) {
+    const isPasswordValid =
+      Boolean(password) &&
+      (password === expectedPassword || password === expectedSuperPassword);
+
+    if (!isAuthedByCookie && !isPasswordValid) {
       return NextResponse.json(
-        { message: "Hanya admin BEM yang diperbolehkan membuat link." },
+        { message: "Hanya admin BEM yang diperbolehkan membuat link. Silakan masukkan password admin." },
         { status: 401 },
       );
     }

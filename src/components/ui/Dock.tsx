@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Database, ContactRound, Link as LinkIcon, QrCode } from "lucide-react";
+import { Home, Database, ContactRound, Link as LinkIcon, QrCode, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { id: "home", icon: Home, label: "Apps", href: "/app" },
   { id: "shortener", icon: LinkIcon, label: "Shortener", href: "/app/shortener" },
+  { id: "twibbon", icon: Sparkles, label: "Twibbon", href: "/app/twibbons" },
   { id: "qr", icon: QrCode, label: "QR Code", href: "/app/qrgenerator" },
   { id: "database", icon: Database, label: "Database", href: "/app/database" },
   { id: "contact", icon: ContactRound, label: "Contact", href: "/app/contact" },

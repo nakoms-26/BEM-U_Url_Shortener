@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { z } from "zod";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { SUPER_ADMIN_COOKIE_NAME, hasSuperAdminAccess } from "@/lib/admin-auth";
 
 const updateLinkSchema = z.object({
   id: z.string().min(1, { message: "ID link tidak valid." }),
@@ -23,7 +24,7 @@ const updateLinkSchema = z.object({
       },
     ),
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
-  password: z.string().min(1, { message: "Password wajib diisi." }),
+  password: z.string().optional(),
 });
 
 export async function PATCH(request: NextRequest) {
@@ -39,16 +40,13 @@ export async function PATCH(request: NextRequest) {
     const { id, slug, urlAsli, lembaga, password } = parsed.data;
     const expectedPassword = process.env.SUPER_ADMIN_EDIT_PASSWORD;
 
-    if (!expectedPassword) {
-      return NextResponse.json(
-        { message: "SUPER_ADMIN_EDIT_PASSWORD belum dikonfigurasi." },
-        { status: 500 },
-      );
-    }
+    const superCookie = request.cookies.get(SUPER_ADMIN_COOKIE_NAME)?.value;
+    const isAuthedByCookie = hasSuperAdminAccess(superCookie);
+    const isPasswordValid = Boolean(password) && password === expectedPassword;
 
-    if (password !== expectedPassword) {
+    if (!isAuthedByCookie && !isPasswordValid) {
       return NextResponse.json(
-        { message: "Password super admin salah." },
+        { message: "Password Super Admin salah atau sesi kadaluarsa." },
         { status: 401 },
       );
     }
