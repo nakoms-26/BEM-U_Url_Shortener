@@ -43,7 +43,6 @@ export function EditTwibbonDialog({
   const [type, setType] = useState<"IMAGE" | "VIDEO">("IMAGE");
   const [chromaColor, setChromaColor] = useState("#00FF00");
   const [isActive, setIsActive] = useState(true);
-  const [password, setPassword] = useState("");
 
   const [newLayerFile, setNewLayerFile] = useState<File | null>(null);
   const [newThumbnailFile, setNewThumbnailFile] = useState<File | null>(null);
@@ -72,7 +71,6 @@ export function EditTwibbonDialog({
       }
       setNewLayerFile(null);
       setNewThumbnailFile(null);
-      setPassword("");
     }
   }, [twibbon]);
 
@@ -144,10 +142,6 @@ export function EditTwibbonDialog({
       toast.error("Slug hanya boleh berisi huruf, angka, dan strip (-).");
       return;
     }
-    if (!password) {
-      toast.error("Password admin wajib diisi.");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -201,7 +195,6 @@ export function EditTwibbonDialog({
           layerUrl: finalLayerUrl,
           thumbnailUrl: finalThumbnailUrl,
           isActive,
-          password,
         }),
       });
 
@@ -408,21 +401,6 @@ export function EditTwibbonDialog({
               />
               <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
-          </div>
-
-          {/* Password Super Admin */}
-          <div className="space-y-1.5 pt-1">
-            <Label htmlFor="edit-twibbon-password" className="text-xs font-semibold text-slate-700">
-              Password Super Admin <span className="text-red-500">*</span>
-            </Label>
-            <GlassInput
-              id="edit-twibbon-password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
           </div>
 
           {/* Upload progress */}

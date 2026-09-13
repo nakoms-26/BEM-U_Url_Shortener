@@ -30,7 +30,6 @@ export function DeleteTwibbonDialog({
   onSuccess,
 }: DeleteTwibbonDialogProps) {
   const [confirmationSlug, setConfirmationSlug] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!twibbon) return null;
@@ -38,11 +37,6 @@ export function DeleteTwibbonDialog({
   const handleDelete = async () => {
     if (confirmationSlug !== twibbon.slug) {
       toast.error("Slug konfirmasi tidak cocok!");
-      return;
-    }
-
-    if (!password) {
-      toast.error("Password admin wajib diisi.");
       return;
     }
 
@@ -55,7 +49,6 @@ export function DeleteTwibbonDialog({
           id: twibbon.id,
           slug: twibbon.slug,
           confirmationSlug,
-          password,
         }),
       });
 
@@ -66,7 +59,6 @@ export function DeleteTwibbonDialog({
 
       toast.success(data.message || "Twibbon berhasil dihapus.");
       setConfirmationSlug("");
-      setPassword("");
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
@@ -102,25 +94,6 @@ export function DeleteTwibbonDialog({
               className="font-mono text-sm"
             />
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="delete-twibbon-password" className="text-xs font-semibold text-slate-700">
-              Password Super Admin / Admin
-            </Label>
-            <GlassInput
-              id="delete-twibbon-password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleDelete();
-                }
-              }}
-            />
-          </div>
         </div>
 
         <GlassDialogFooter className="flex flex-row gap-2 mt-2">
@@ -137,7 +110,7 @@ export function DeleteTwibbonDialog({
             type="button"
             className="flex-1 bg-red-600 hover:bg-red-700 text-white"
             onClick={handleDelete}
-            disabled={loading || confirmationSlug !== twibbon.slug || !password}
+            disabled={loading || confirmationSlug !== twibbon.slug}
           >
             {loading ? "Menghapus..." : "Hapus Permanen"}
           </GlassButton>

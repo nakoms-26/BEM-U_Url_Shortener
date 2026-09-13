@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { z } from "zod";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import { SUPER_ADMIN_COOKIE_NAME, hasSuperAdminAccess } from "@/lib/admin-auth";
+import {
+  DATABASE_ACCESS_COOKIE_NAME,
+  SUPER_ADMIN_COOKIE_NAME,
+  hasDatabaseAccess,
+  hasSuperAdminAccess,
+} from "@/lib/admin-auth";
 
 const deleteLinkSchema = z.object({
   id: z.string().min(1, { message: "ID link tidak valid." }),
@@ -33,12 +38,15 @@ export async function DELETE(request: NextRequest) {
     const expectedPassword = process.env.SUPER_ADMIN_EDIT_PASSWORD;
 
     const superCookie = request.cookies.get(SUPER_ADMIN_COOKIE_NAME)?.value;
-    const isAuthedByCookie = hasSuperAdminAccess(superCookie);
+    const adminCookie = request.cookies.get(DATABASE_ACCESS_COOKIE_NAME)?.value;
+    const isAuthedByCookie =
+      hasSuperAdminAccess(superCookie) ||
+      hasDatabaseAccess(adminCookie, superCookie);
     const isPasswordValid = Boolean(password) && password === expectedPassword;
 
     if (!isAuthedByCookie && !isPasswordValid) {
       return NextResponse.json(
-        { message: "Password Super Admin salah atau sesi kadaluarsa." },
+        { message: "Sesi admin tidak valid atau belum masuk." },
         { status: 401 },
       );
     }

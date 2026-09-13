@@ -59,19 +59,19 @@ export const twibbonBaseSchema = z.object({
 export const createTwibbonApiSchema = twibbonBaseSchema.extend({
   layerUrl: z.string().url("URL layer frame tidak valid"),
   thumbnailUrl: z.string().url("URL thumbnail tidak valid"),
-  password: z.string().min(1, "Password admin wajib diisi"),
+  password: z.string().optional().nullable(),
 });
 
 export const updateTwibbonApiSchema = twibbonBaseSchema.extend({
   id: z.coerce.number().min(1, "ID twibbon tidak valid"),
   layerUrl: z.string().url("URL layer frame tidak valid").optional().nullable(),
   thumbnailUrl: z.string().url("URL thumbnail tidak valid").optional().nullable(),
-  password: z.string().min(1, "Password admin wajib diisi"),
+  password: z.string().optional().nullable(),
 });
 
 export const deleteTwibbonApiSchema = z.object({
   id: z.coerce.number().min(1, "ID twibbon tidak valid"),
   slug: z.string().min(1, "Slug wajib diisi"),
   confirmationSlug: z.string().min(1, "Konfirmasi slug wajib diisi"),
-  password: z.string().min(1, "Password wajib diisi"),
+  password: z.string().optional().nullable(),
 });

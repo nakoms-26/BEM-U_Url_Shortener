@@ -40,7 +40,6 @@ export function CreateTwibbonDialog({
   const [type, setType] = useState<"IMAGE" | "VIDEO">("IMAGE");
   const [chromaColor, setChromaColor] = useState("#00FF00");
   const [isActive, setIsActive] = useState(true);
-  const [password, setPassword] = useState("");
 
   const [layerFile, setLayerFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -137,10 +136,6 @@ export function CreateTwibbonDialog({
       toast.error("File thumbnail wajib diunggah.");
       return;
     }
-    if (!password) {
-      toast.error("Password admin wajib diisi.");
-      return;
-    }
 
     const maxLayerSize = type === "VIDEO" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
     if (layerFile.size > maxLayerSize) {
@@ -194,7 +189,6 @@ export function CreateTwibbonDialog({
           layerUrl,
           thumbnailUrl,
           isActive,
-          password,
         }),
       });
 
@@ -213,7 +207,6 @@ export function CreateTwibbonDialog({
       setIsActive(true);
       setLayerFile(null);
       setThumbnailFile(null);
-      setPassword("");
       setUploadProgress(null);
       onOpenChange(false);
       onSuccess();
@@ -418,21 +411,6 @@ export function CreateTwibbonDialog({
               />
               <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
-          </div>
-
-          {/* Password Super Admin Verification */}
-          <div className="space-y-1.5 pt-1">
-            <Label htmlFor="twibbon-create-password" className="text-xs font-semibold text-slate-700">
-              Password Super Admin <span className="text-red-500">*</span>
-            </Label>
-            <GlassInput
-              id="twibbon-create-password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
           </div>
 
           {/* Upload Progress Bar */}

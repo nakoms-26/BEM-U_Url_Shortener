@@ -75,8 +75,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("waktu");
   const [selectedLink, setSelectedLink] = useState<Link | null>(null);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
@@ -120,7 +118,7 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
     },
   });
 
-  const handleOpenPasswordDialog = (link: Link) => {
+  const handleOpenEditDialog = (link: Link) => {
     const urlAsliValue = getLinkUrlAsli(link);
     setSelectedLink(link);
     setPreviousUrlAsli(urlAsliValue);
@@ -130,48 +128,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
       urlAsli: urlAsliValue,
       lembaga: link.lembaga || "",
     });
-    setAdminPassword("");
-    setIsPasswordDialogOpen(true);
-  };
-
-  const handleVerifyPassword = async () => {
-    if (!adminPassword) {
-      toast.error("Password wajib diisi.");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/links/verify-super-admin-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password: adminPassword }),
-      });
-
-      const payload = await response.json();
-      if (!response.ok) {
-        toast.error(payload?.message || "Password super admin salah.");
-        return;
-      }
-    } catch {
-      toast.error("Gagal memverifikasi password super admin.");
-      return;
-    }
-
-    if (!selectedLink) return;
-
-    const urlAsliValue = getLinkUrlAsli(selectedLink);
-    const lembagaValue = selectedLink.lembaga || "";
-
-    reset({
-      slug: selectedLink.slug,
-      urlAsli: urlAsliValue,
-      lembaga: lembagaValue,
-    });
-    setSelectedLembaga(lembagaValue);
-    setPreviousUrlAsli(urlAsliValue);
-    setIsPasswordDialogOpen(false);
     setIsEditDialogOpen(true);
   };
 
@@ -193,7 +149,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
           slug: data.slug,
           urlAsli: data.urlAsli,
           lembaga: data.lembaga,
-          password: adminPassword,
         }),
       });
 
@@ -250,7 +205,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
           id: selectedLink.id,
           slug: selectedLink.slug,
           confirmationSlug: deleteConfirmationSlug,
-          password: adminPassword,
         }),
       });
 
@@ -455,7 +409,7 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleOpenPasswordDialog(link);
+                          handleOpenEditDialog(link);
                         }}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white transition-colors duration-150"
                       >
@@ -472,53 +426,6 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
           })
         )}
       </div>
-
-      <GlassDialog
-        open={isPasswordDialogOpen}
-        onOpenChange={setIsPasswordDialogOpen}
-      >
-        <GlassDialogContent className="sm:max-w-md">
-          <GlassDialogHeader>
-            <GlassDialogTitle>Password Super Admin</GlassDialogTitle>
-            <GlassDialogDescription>
-              Masukkan password super admin untuk edit atau menghapus link.
-            </GlassDialogDescription>
-          </GlassDialogHeader>
-          <div className="space-y-2 py-2">
-            <Label htmlFor="edit-admin-password">Password</Label>
-            <GlassInput
-              id="edit-admin-password"
-              type="password"
-              placeholder="••••••••"
-              value={adminPassword}
-              onChange={(event) => setAdminPassword(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  void handleVerifyPassword();
-                }
-              }}
-            />
-          </div>
-          <GlassDialogFooter className="flex flex-row gap-1.5">
-            <GlassButton
-              type="button"
-              variant="outline"
-              onClick={() => setIsPasswordDialogOpen(false)}
-            >
-              Batal
-            </GlassButton>
-            <GlassButton
-              type="button"
-              onClick={handleVerifyPassword}
-              disabled={!adminPassword}
-            >
-              Lanjut
-            </GlassButton>
-          </GlassDialogFooter>
-        </GlassDialogContent>
-      </GlassDialog>
 
       <GlassDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <GlassDialogContent className="sm:max-w-lg">
