@@ -1,6 +1,5 @@
-import { ArrowUpRight, Link2, QrCode, Database, BarChart3, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowUpRight, Link2, QrCode, Database, BarChart3, Clock, TrendingUp, Sparkles, FileText } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import pool, { twibbonPool } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
@@ -47,8 +46,8 @@ export default async function Hero() {
       "SELECT * FROM links ORDER BY created_at DESC LIMIT 3"
     );
     recentLinks = recent;
-  } catch (error) {
-    console.error("Failed to fetch home stats:", error);
+  } catch (error: any) {
+    console.warn("Failed to fetch home stats (MySQL offline/unreachable):", error?.message || error);
   }
 
   let totalTwibbons = 0;
@@ -63,8 +62,8 @@ export default async function Hero() {
       "SELECT SUM(downloadsCount) as totalClicks FROM twibbon"
     );
     totalTwibbonDownloads = tDownloads[0]?.totalClicks || 0;
-  } catch (error) {
-    console.error("Failed to fetch twibbon stats:", error);
+  } catch (error: any) {
+    console.warn("Failed to fetch twibbon stats (MySQL offline/unreachable):", error?.message || error);
   }
 
   const formatDate = (dateStr: Date | string) => {
@@ -83,49 +82,131 @@ export default async function Hero() {
   return (
     <div className="flex flex-col min-h-full px-6 pt-3 md:pt-4 pb-24 max-w-md mx-auto w-full gap-5">
       {/* Overview Stats (3 Metrik Seimbang) */}
-      <div className="grid grid-cols-3 gap-2.5 w-full">
+      <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full">
         {/* Total Link */}
-        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl font-black text-slate-900">{totalLinks}</span>
-            <div className="p-1.5 rounded-full bg-violet-50 text-violet-600">
+        <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-[1.5rem] p-3 sm:p-3.5 shadow-xs flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center justify-between gap-1 mb-1.5 min-w-0">
+            <span className="text-base sm:text-xl font-black text-slate-900 tracking-tight truncate min-w-0">
+              {totalLinks}
+            </span>
+            <div className="p-1 sm:p-1.5 rounded-full bg-violet-50 text-violet-600 shrink-0">
               <Link2 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
             Total Link
           </span>
         </div>
 
         {/* Total Klik */}
-        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl font-black text-slate-900">{totalClicks || 0}</span>
-            <div className="p-1.5 rounded-full bg-emerald-50 text-emerald-600">
+        <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-[1.5rem] p-3 sm:p-3.5 shadow-xs flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center justify-between gap-1 mb-1.5 min-w-0">
+            <span
+              className="text-base sm:text-xl font-black text-slate-900 tracking-tight truncate min-w-0"
+              title={String(totalClicks || 0)}
+            >
+              {totalClicks || 0}
+            </span>
+            <div className="p-1 sm:p-1.5 rounded-full bg-emerald-50 text-emerald-600 shrink-0">
               <BarChart3 className="w-3.5 h-3.5" />
             </div>
           </div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
             Total Klik
           </span>
         </div>
 
         {/* Unduhan Twibbon */}
-        <div className="bg-white border border-slate-200 rounded-[1.5rem] p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xl font-black text-slate-900">{totalTwibbonDownloads || 0}</span>
-            <div className="p-1.5 rounded-full bg-amber-50 text-amber-600">
+        <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-[1.5rem] p-3 sm:p-3.5 shadow-xs flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center justify-between gap-1 mb-1.5 min-w-0">
+            <span
+              className="text-base sm:text-xl font-black text-slate-900 tracking-tight truncate min-w-0"
+              title={String(totalTwibbonDownloads || 0)}
+            >
+              {totalTwibbonDownloads || 0}
+            </span>
+            <div className="p-1 sm:p-1.5 rounded-full bg-amber-50 text-amber-600 shrink-0">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
           </div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
             Unduhan
           </span>
         </div>
       </div>
 
-      {/* Bento Grid 2x2: 4 Fitur Utama Terpadu (Clean & Seragam) */}
+      {/* Bento Grid: Fitur Utama & Layanan Terpadu BEM */}
       <div className="grid grid-cols-2 gap-3.5 w-full">
+        {/* Pemesanan Rismed (Merge 2 Kolom) */}
+        <a
+          href="https://rismed.unsoed.link"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "col-span-2 relative overflow-hidden p-5 rounded-[1.5rem]",
+            "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white shadow-xs",
+            "border border-violet-400/30",
+            "transition-all duration-200 active:scale-[0.98] hover:shadow-md hover:shadow-violet-500/20 group",
+            "flex flex-col justify-between h-34"
+          )}
+        >
+          {/* Ambient Decorative Glows */}
+          <div className="absolute -right-8 -top-8 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-pink-500/15 rounded-full blur-xl pointer-events-none" />
+
+          {/* Top Row: Title Besar & External Arrow */}
+          <div className="relative z-10 flex items-start justify-between gap-3">
+            <h2 className="font-black text-white text-3xl tracking-tight leading-tight">
+              Pemesanan Rismed
+            </h2>
+            <div className="p-1.5 rounded-full bg-white/15 text-white/80 group-hover:bg-white group-hover:text-violet-600 group-hover:rotate-12 transition-all shrink-0">
+              <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+            </div>
+          </div>
+
+          {/* Bottom Row: Subtitle & URL Indicator */}
+          <div className="relative z-10 flex items-end justify-between gap-2">
+            <p className="text-xs text-violet-100/90 font-medium leading-tight line-clamp-1">
+              Layanan desain grafis, publikasi & media resmi BEM
+            </p>
+            <span className="text-[10px] font-semibold text-violet-200/90 font-mono shrink-0">
+              rismed.unsoed.link
+            </span>
+          </div>
+        </a>
+
+        {/* SOP Rismed */}
+        <a
+          href="https://drive.google.com/drive/folders/1LfBlUZEg-fnwreUZxDfg8txBNbfNmEeP"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "col-span-2 flex items-center justify-between p-4 rounded-[1.5rem]",
+            "bg-white border border-slate-200 shadow-xs",
+            "transition-all duration-200 active:scale-[0.98] hover:border-violet-300 hover:shadow-sm group"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600 border border-violet-100 group-hover:bg-violet-600 group-hover:text-white transition-colors shrink-0">
+              <FileText className="w-4 h-4" strokeWidth={2.5} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-slate-900 text-sm leading-tight">SOP Rismed</h3>
+                <span className="text-[9px] font-bold text-violet-700 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded-md">
+                  Drive
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
+                Panduan & alur resmi pemesanan konten BEM
+              </p>
+            </div>
+          </div>
+          <div className="p-1 rounded-full text-slate-300 group-hover:text-violet-600 group-hover:rotate-12 transition-all shrink-0">
+            <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+          </div>
+        </a>
+
         {/* 1. Short Link */}
         <Link
           href="/app/shortener"
@@ -264,8 +345,8 @@ export default async function Hero() {
                       index === 0
                         ? "bg-amber-50"
                         : index === 1
-                        ? "bg-slate-50"
-                        : "bg-orange-50"
+                          ? "bg-slate-50"
+                          : "bg-orange-50"
                     )}
                   >
                     <TrendingUp
@@ -274,8 +355,8 @@ export default async function Hero() {
                         index === 0
                           ? "text-amber-500"
                           : index === 1
-                          ? "text-slate-400"
-                          : "text-orange-400"
+                            ? "text-slate-400"
+                            : "text-orange-400"
                       )}
                     />
                   </div>
@@ -285,8 +366,8 @@ export default async function Hero() {
                       index === 0
                         ? "text-amber-600"
                         : index === 1
-                        ? "text-slate-600"
-                        : "text-orange-500"
+                          ? "text-slate-600"
+                          : "text-orange-500"
                     )}
                   >
                     {(link.jumlah_klik || 0).toLocaleString()} klik
