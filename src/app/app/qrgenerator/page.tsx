@@ -21,9 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SHORT_LINK_BASE_URL } from "@/lib/url-helper";
 
 export default function QRCodeGeneratorPage() {
-  const [url, setUrl] = useState("https://unsoed.link");
+  const [url, setUrl] = useState(SHORT_LINK_BASE_URL);
   const [qrColor, setQrColor] = useState("#0f172a");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoName, setLogoName] = useState("");
@@ -38,10 +39,6 @@ export default function QRCodeGeneratorPage() {
   const qrCodeInstance = useRef<any>(null); // For QRCodeStyling instance
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.origin) {
-      setUrl((prev) => (prev === "https://unsoed.link" ? window.location.origin : prev));
-    }
-
     // Import dynamically to avoid SSR window errors
     import("qr-code-styling").then((module) => {
       const QRCodeStyling = module.default;
@@ -49,7 +46,7 @@ export default function QRCodeGeneratorPage() {
         width: 280,
         height: 280,
         type: "svg",
-        data: url || "https://unsoed.link",
+        data: url || SHORT_LINK_BASE_URL,
         margin: 5,
         qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "H" },
         imageOptions: { hideBackgroundDots: true, imageSize: logoSizeMultiplier, margin: 5, crossOrigin: "anonymous" },
@@ -73,7 +70,7 @@ export default function QRCodeGeneratorPage() {
   useEffect(() => {
     if (qrCodeInstance.current) {
       qrCodeInstance.current.update({
-        data: url || "https://unsoed.link",
+        data: url || SHORT_LINK_BASE_URL,
         image: logoUrl,
         dotsOptions: { type: dotsType, color: qrColor },
         cornersSquareOptions: { type: cornerType, color: qrColor },

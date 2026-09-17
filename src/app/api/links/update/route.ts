@@ -8,6 +8,7 @@ import {
   hasDatabaseAccess,
   hasSuperAdminAccess,
 } from "@/lib/admin-auth";
+import { isReservedSlug } from "@/lib/reserved-slugs";
 
 const updateLinkSchema = z.object({
   id: z.string().min(1, { message: "ID link tidak valid." }),
@@ -17,6 +18,9 @@ const updateLinkSchema = z.object({
     .max(50, { message: "Slug maksimal 50 karakter." })
     .regex(/^[a-zA-Z0-9-]+$/, {
       message: "Slug hanya boleh berisi huruf, angka, dan strip (-).",
+    })
+    .refine((val) => !isReservedSlug(val), {
+      message: "Slug ini digunakan oleh halaman resmi bem-unsoed.com atau sistem dan tidak boleh dipakai.",
     }),
   urlAsli: z
     .string()
@@ -56,6 +60,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { message: "Sesi admin tidak valid atau belum masuk." },
         { status: 401 },
+      );
+    }
+
+    if (isReservedSlug(slug)) {
+      return NextResponse.json(
+        { message: "Slug ini digunakan oleh halaman resmi bem-unsoed.com atau sistem dan tidak boleh dipakai." },
+        { status: 400 }
       );
     }
 

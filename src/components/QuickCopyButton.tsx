@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getShortUrl, getShortDisplayUrl } from "@/lib/url-helper";
 
 interface QuickCopyButtonProps {
   slug: string;
@@ -21,11 +22,10 @@ export default function QuickCopyButton({
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const fullUrl = origin ? `${origin}/${slug}` : `/${slug}`;
+    const fullUrl = getShortUrl(slug);
     navigator.clipboard.writeText(fullUrl);
     setCopied(true);
-    toast.success(`Tautan /${slug} berhasil disalin!`);
+    toast.success(`Tautan ${getShortDisplayUrl(slug)} berhasil disalin!`);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -39,7 +39,7 @@ export default function QuickCopyButton({
         className
       )}
       title="Salin tautan singkat"
-      aria-label={`Salin tautan /${slug}`}
+      aria-label={`Salin tautan ${getShortDisplayUrl(slug)}`}
     >
       {copied ? (
         <Check className={cn("w-3.5 h-3.5 text-emerald-600 stroke-[2.5]", iconClassName)} />

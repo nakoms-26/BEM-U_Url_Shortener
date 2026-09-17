@@ -7,6 +7,7 @@ import {
   SUPER_ADMIN_COOKIE_NAME,
   hasDatabaseAccess,
 } from "@/lib/admin-auth";
+import { isReservedSlug } from "@/lib/reserved-slugs";
 
 const createLinkSchema = z.object({
   urlAsli: z
@@ -25,6 +26,9 @@ const createLinkSchema = z.object({
     .max(50, { message: "Slug maksimal 50 karakter." })
     .regex(/^[a-zA-Z0-9-]+$/, {
       message: "Slug hanya boleh berisi huruf, angka, dan strip (-).",
+    })
+    .refine((val) => !isReservedSlug(val), {
+      message: "Slug ini digunakan oleh halaman resmi bem-unsoed.com atau sistem dan tidak boleh dipakai.",
     }),
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
   password: z.string().optional(),
@@ -56,6 +60,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { message: "Hanya admin BEM yang diperbolehkan membuat link. Silakan masukkan password admin." },
         { status: 401 },
+      );
+    }
+
+    if (isReservedSlug(slug)) {
+      return NextResponse.json(
+        { message: "Slug ini digunakan oleh halaman resmi bem-unsoed.com atau sistem dan tidak boleh dipakai." },
+        { status: 400 }
       );
     }
 

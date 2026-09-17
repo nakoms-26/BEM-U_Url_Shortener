@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/glass-dialog";
 import { LEMBAGA_LIST } from "@/lib/constants";
 import { toast } from "sonner";
+import { isReservedSlug } from "@/lib/reserved-slugs";
+import { getShortUrl, getShortDisplayUrl } from "@/lib/url-helper";
 
 
 interface Link {
@@ -58,6 +60,9 @@ const editFormSchema = z.object({
     .max(50, { message: "Slug maksimal 50 karakter." })
     .regex(/^[a-zA-Z0-9-]+$/, {
       message: "Slug hanya boleh berisi huruf, angka, dan strip (-).",
+    })
+    .refine((val) => !isReservedSlug(val), {
+      message: "Slug ini merupakan halaman resmi bem-unsoed.com atau path sistem.",
     }),
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
 });
@@ -97,10 +102,10 @@ export default function DatabaseClient({ initialLinks }: DatabaseClientProps) {
 
   const handleCopyLink = async (e: React.MouseEvent, link: Link) => {
     e.stopPropagation();
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const fullUrl = origin ? `${origin}/${link.slug}` : `/${link.slug}`;
+    const fullUrl = getShortUrl(link.slug);
     await navigator.clipboard.writeText(fullUrl);
     setCopiedId(link.id);
+    toast.success(`Tautan ${getShortDisplayUrl(link.slug)} berhasil disalin!`);
     setTimeout(() => setCopiedId(null), 2000);
   };
   const {

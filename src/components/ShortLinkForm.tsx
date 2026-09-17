@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { GlassNotification } from "./glass-notification";
 import { AdminPasswordDialog } from "./AdminPasswordDialog";
 import { useRouter } from "next/navigation";
+import { isReservedSlug } from "@/lib/reserved-slugs";
+import { getShortUrl, getShortDomain } from "@/lib/url-helper";
 
 // Skema Validasi Zod
 const formSchema = z.object({
@@ -37,6 +39,9 @@ const formSchema = z.object({
     .max(50, { message: "Slug maksimal 50 karakter." })
     .regex(/^[a-zA-Z0-9-]+$/, {
       message: "Slug hanya boleh berisi huruf, angka, dan strip (-).",
+    })
+    .refine((val) => !isReservedSlug(val), {
+      message: "Slug ini merupakan halaman resmi bem-unsoed.com atau path sistem.",
     }),
   lembaga: z.string().min(1, { message: "Silakan pilih lembaga." }),
 });
@@ -170,8 +175,7 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
         return;
       }
 
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const fullUrl = origin ? `${origin}/${data.slug}` : `/${data.slug}`;
+      const fullUrl = getShortUrl(data.slug);
 
       toast.custom(() => (
         <GlassNotification
@@ -241,8 +245,10 @@ export default function ShortLinkForm({ initialIsLoggedIn = false }: ShortLinkFo
           >
             Custom Slug
           </Label>
-          <div className="flex items-center gap-1 text-slate-900 font-medium text-sm">
-            <span className="text-slate-400 select-none font-mono">/</span>
+          <div className="flex items-center gap-1.5 text-slate-900 font-medium text-sm">
+            <span className="text-slate-400 select-none font-mono text-xs whitespace-nowrap">
+              {getShortDomain()}/
+            </span>
             <input
               id="slug"
               type="text"
