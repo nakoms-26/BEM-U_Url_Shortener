@@ -37,7 +37,7 @@ export default function InstallPwaPrompt() {
 
     // 3. Cek apakah pengguna sebelumnya menekan "Nanti Saja" dalam 7 hari terakhir
     const dismissedUntil = localStorage.getItem("bem_pwa_dismissed_until");
-    if (dismissedUntil && Date.now() < Number(dismissedUntil)) {
+    if (dismissedUntil && Date.now() < Number(dismissedUntil) && process.env.NODE_ENV !== "development") {
       return;
     }
 
@@ -84,6 +84,17 @@ export default function InstallPwaPrompt() {
     };
   }, []);
 
+  // Timer auto-close 5 detik ketika popup muncul
+  useEffect(() => {
+    if (!showPrompt || showIosGuide) return;
+
+    const timer = setTimeout(() => {
+      handleDismiss();
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [showPrompt, showIosGuide]);
+
   const handleInstallClick = async () => {
     if (isIos) {
       setShowIosGuide(true);
@@ -107,68 +118,107 @@ export default function InstallPwaPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     setShowIosGuide(false);
-    // Simpan waktu penundaan selama 7 hari (7 * 24 * 60 * 60 * 1000 ms)
-    const sevenDaysLater = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    localStorage.setItem("bem_pwa_dismissed_until", String(sevenDaysLater));
+    // Simpan waktu penundaan selama 7 hari
+    if (process.env.NODE_ENV !== "development") {
+      const sevenDaysLater = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      localStorage.setItem("bem_pwa_dismissed_until", String(sevenDaysLater));
+    }
   };
 
   if (!showPrompt) return null;
 
   return (
     <>
-      {/* Floating Pill Banner Prompt (Mengambang di atas Dock navigasi) */}
+      {/* 1-Layar Backdrop dengan Blur (Klik di luar frame untuk close) */}
       <div
-        className={cn(
-          "fixed bottom-22 left-4 right-4 z-40 max-w-md mx-auto",
-          "animate-in fade-in slide-in-from-bottom-5 duration-300 pointer-events-auto"
-        )}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-300"
+        onClick={handleDismiss}
       >
-        <div className="bg-white/95 backdrop-blur-md border border-violet-100 rounded-2xl p-3.5 shadow-[0_12px_30px_rgba(124,58,237,0.18)] flex items-center gap-3">
-          {/* Logo BEM App */}
-          <div className="relative w-11 h-11 rounded-xl bg-violet-50 p-1 border border-violet-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
-            <Image
-              src="/icons/icon-192.png"
-              alt="Logo BEM"
-              width={40}
-              height={40}
-              className="w-9 h-9 object-contain"
+        {/* Frame Modal Popup */}
+        <div
+          className={cn(
+            "relative bg-white border border-slate-100 rounded-[2rem] p-6 max-w-sm w-full shadow-2xl overflow-hidden",
+            "animate-in zoom-in-95 fade-in duration-300 pointer-events-auto"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Progress Bar Durasi 5 Detik */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-violet-100/80 overflow-hidden">
+            <div
+              className="h-full bg-violet-600 rounded-r-full"
+              style={{
+                animation: "pwaProgress 5s linear forwards",
+              }}
             />
           </div>
 
-          {/* Text Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700">
-                PWA
-              </span>
-              <h4 className="text-xs font-bold text-slate-900 truncate">
-                Pasang Aplikasi BEM
-              </h4>
+          {/* Tombol X untuk Close */}
+          <button
+            onClick={handleDismiss}
+            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Tutup"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Logo BEM App */}
+          <div className="flex justify-center mt-2 mb-4">
+            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 p-0.5 shadow-lg shadow-violet-500/25 flex items-center justify-center">
+              <div className="w-full h-full rounded-[14px] bg-white p-2.5 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/icons/icon-192.png"
+                  alt="Logo BEM"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
-            <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
-              Akses cepat tanpa bilah browser di layar utama HP kamu.
+          </div>
+
+          {/* Text Info */}
+          <div className="text-center mb-6">
+            <span className="inline-flex items-center text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 tracking-wider mb-2">
+              PWA · Portal Resmi
+            </span>
+            <h3 className="text-lg font-bold text-slate-900 leading-snug">
+              Pasang Aplikasi BEM
+            </h3>
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed px-2">
+              Akses cepat tanpa bilah browser langsung di layar utama HP kamu.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex flex-col gap-2">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-violet-600/25 transition-all active:scale-95 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Pasang</span>
+              <Download className="w-4 h-4 stroke-[2.5]" />
+              <span>Pasang Sekarang</span>
             </button>
             <button
               onClick={handleDismiss}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-              title="Tutup (Ingatkan nanti)"
+              className="w-full py-2 px-4 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              Nanti Saja
             </button>
           </div>
+
+          {/* Label Durasi 5 Detik */}
+          <p className="text-[10px] text-slate-400 text-center mt-3 font-medium">
+            Otomatis tertutup dalam 5 detik
+          </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes pwaProgress {
+          0% { width: 100%; }
+          100% { width: 0%; }
+        }
+      `}</style>
 
       {/* iOS Safari Guide Modal / Bottom Sheet */}
       {showIosGuide && (
