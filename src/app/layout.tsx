@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Dock from "@/components/ui/Dock";
 import AppHeader from "@/components/AppHeader";
-import InstallPwaPrompt from "@/components/InstallPwaPrompt";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -56,31 +57,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${geistSans.variable} h-dvh overflow-hidden`}>
+    <html
+      lang="id"
+      className={`${geistSans.variable} h-dvh overflow-hidden`}
+      suppressHydrationWarning
+    >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans h-full flex flex-col bg-slate-50 overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans h-full flex flex-col bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 overflow-hidden`}
       >
-        {/* Light background: soft violet top glow */}
-        <div
-          className="fixed inset-0 z-0 pointer-events-none"
-          aria-hidden="true"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 50% at 50% -5%, rgba(139,92,246,0.07) 0%, transparent 65%)",
-          }}
-        />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {/* Light background: soft violet top glow */}
+          <div
+            className="fixed inset-0 z-0 pointer-events-none dark:opacity-30"
+            aria-hidden="true"
+            style={{
+              background:
+                "radial-gradient(ellipse 80% 50% at 50% -5%, rgba(139,92,246,0.07) 0%, transparent 65%)",
+            }}
+          />
 
-        {/* Mobile App Shell */}
-        <div className="relative z-10 flex flex-col h-full overflow-hidden">
-          <AppHeader />
-          <main className="flex-1 overflow-y-auto no-scrollbar">
-            {children}
-          </main>
-          <Dock />
-          <InstallPwaPrompt />
-        </div>
+          {/* Mobile App Shell */}
+          <div className="relative z-10 flex flex-col h-full overflow-hidden">
+            <AppHeader />
+            <main className="flex-1 overflow-y-auto no-scrollbar">
+              {children}
+            </main>
+            <Dock />
+            <ServiceWorkerRegister />
+          </div>
 
-        <Toaster position="top-center" richColors />
+          <Toaster position="top-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

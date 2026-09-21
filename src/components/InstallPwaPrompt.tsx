@@ -17,31 +17,22 @@ export default function InstallPwaPrompt() {
   const [showIosGuide, setShowIosGuide] = useState(false);
 
   useEffect(() => {
-    // 1. Daftarkan Service Worker
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch((err) => {
-          console.warn("PWA Service Worker gagal didaftarkan:", err);
-        });
-      });
-    }
-
-    // 2. Periksa apakah sudah berjalan di mode Standalone (sudah terinstal)
+    // 1. Periksa apakah sudah berjalan di mode Standalone (sudah terinstal)
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
     if (isStandalone) {
-      return; // Tidak perlu tampilkan prompt jika sudah diinstall
+      return;
     }
 
-    // 3. Cek apakah pengguna sebelumnya menekan "Nanti Saja" dalam 7 hari terakhir
+    // 2. Cek apakah pengguna sebelumnya menekan "Nanti Saja" dalam 7 hari terakhir
     const dismissedUntil = localStorage.getItem("bem_pwa_dismissed_until");
     if (dismissedUntil && Date.now() < Number(dismissedUntil) && process.env.NODE_ENV !== "development") {
       return;
     }
 
-    // 4. Deteksi apakah perangkat adalah iOS Safari
+    // 3. Deteksi apakah perangkat adalah iOS Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     const isSafariBrowser =
@@ -52,18 +43,16 @@ export default function InstallPwaPrompt() {
 
     if (isIosDevice && isSafariBrowser) {
       setIsIos(true);
-      // Tampilkan banner setelah delay 2 detik agar tidak mengagetkan
       const timer = setTimeout(() => {
         setShowPrompt(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
 
-    // 5. Tangkap event beforeinstallprompt untuk Android / Chromium / Desktop
+    // 4. Tangkap event beforeinstallprompt untuk Android / Chromium / Desktop
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Munculkan prompt setelah delay 1.5 detik
       setTimeout(() => {
         setShowPrompt(true);
       }, 1500);
@@ -71,7 +60,7 @@ export default function InstallPwaPrompt() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // 6. Tangkap event saat aplikasi selesai di-install
+    // 5. Tangkap event saat aplikasi selesai di-install
     const handleAppInstalled = () => {
       setShowPrompt(false);
       setDeferredPrompt(null);

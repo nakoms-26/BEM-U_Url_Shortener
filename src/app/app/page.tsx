@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import pool, { twibbonPool } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import QuickCopyButton from "@/components/QuickCopyButton";
+import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -138,10 +139,8 @@ export default async function Hero() {
       {/* Bento Grid: Fitur Utama & Layanan Terpadu BEM */}
       <div className="grid grid-cols-2 gap-3.5 w-full">
         {/* Pemesanan Rismed (Merge 2 Kolom) */}
-        <a
-          href="https://rismed.unsoed.link"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/app/rismed"
           className={cn(
             "col-span-2 relative overflow-hidden p-5 rounded-[1.5rem]",
             "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white shadow-xs",
@@ -159,21 +158,21 @@ export default async function Hero() {
             <h2 className="font-black text-white text-3xl tracking-tight leading-tight">
               Pemesanan Rismed
             </h2>
-            <div className="p-1.5 rounded-full bg-white/15 text-white/80 group-hover:bg-white group-hover:text-violet-600 group-hover:rotate-12 transition-all shrink-0">
+            <div className="p-1.5 rounded-full bg-white/15 text-white/80 group-hover:bg-white group-hover:text-violet-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0">
               <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
             </div>
           </div>
 
-          {/* Bottom Row: Subtitle & URL Indicator */}
+          {/* Bottom Row: Subtitle & Status Indicator */}
           <div className="relative z-10 flex items-end justify-between gap-2">
             <p className="text-xs text-violet-100/90 font-medium leading-tight line-clamp-1">
               Layanan desain grafis, publikasi & media resmi BEM
             </p>
-            <span className="text-[10px] font-semibold text-violet-200/90 font-mono shrink-0">
-              rismed.unsoed.link
+            <span className="text-[10px] font-semibold text-violet-200 bg-white/15 px-2 py-0.5 rounded-full shrink-0">
+              Terintegrasi
             </span>
           </div>
-        </a>
+        </Link>
 
         {/* SOP Rismed */}
         <a
@@ -422,6 +421,9 @@ export default async function Hero() {
           </div>
         </div>
       )}
+
+      {/* PWA Install Prompt (hanya aktif di halaman /app) */}
+      <InstallPwaPrompt />
     </div>
   );
 }

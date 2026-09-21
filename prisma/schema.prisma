@@ -1,0 +1,104 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PJContact {
+  id        String      @id @default(uuid()) @db.VarChar(36)
+  nama      String      @db.VarChar(255)
+  nomor     String      @db.VarChar(50)
+  createdAt DateTime    @default(now()) @map("created_at")
+  role      String?     @db.VarChar(100)
+  mappings  PJMapping[]
+
+  @@index([nama], map: "idx_pj_contacts_nama")
+  @@index([role], map: "idx_pj_contacts_role")
+  @@map("pj_contacts")
+}
+
+model PJMapping {
+  id         String     @id @default(uuid()) @db.VarChar(36)
+  category   String     @db.VarChar(50)
+  lookupKey  String     @map("lookup_key") @db.VarChar(255)
+  pjId       String?    @map("pj_id") @db.VarChar(36)
+  platforms  Json?
+  updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at")
+  pjContact  PJContact? @relation(fields: [pjId], references: [id], onDelete: SetNull)
+
+  @@unique([category, lookupKey], map: "pj_mappings_category_lookup_key_unique")
+  @@index([category], map: "idx_pj_mappings_category")
+  @@index([pjId], map: "idx_pj_mappings_pj_id")
+  @@map("pj_mappings")
+}
+
+model Order {
+  id                      String    @id @default(uuid()) @db.VarChar(36)
+  createdAt               DateTime  @default(now()) @map("created_at")
+  nama                    String    @db.VarChar(255)
+  kementerian             String    @db.VarChar(255)
+  nomorWhatsapp           String    @map("nomor_whatsapp") @db.VarChar(50)
+  sudahBacaSop            Boolean   @default(false) @map("sudah_baca_sop")
+  
+  // Desain & Publikasi
+  judulDesain             String?   @map("judul_desain") @db.Text
+  platformPublikasi       Json?     @map("platform_publikasi")
+  tanggalPublikasi        DateTime? @map("tanggal_publikasi") @db.Date
+  waktuPublikasi          String?   @map("waktu_publikasi") @db.VarChar(100)
+  linkThumbnail           String?   @map("link_thumbnail") @db.Text
+  linkFileKonten          String?   @map("link_file_konten") @db.Text
+  linkCaptionDocs         String?   @map("link_caption_docs") @db.Text
+  requestLagu             String?   @map("request_lagu") @db.Text
+  customShortlink         String?   @map("custom_shortlink") @db.Text
+  fiturTambahanWeb        String?   @map("fitur_tambahan_web") @db.Text
+  status                  String    @default("new") @db.VarChar(50)
+  linkDesainSelesai       String?   @map("link_desain_selesai") @db.Text
+  menuType                String    @map("menu_type") @db.VarChar(50)
+  catatanWebsite          String?   @map("catatan_website") @db.Text
+  
+  // Bantuan Teknis
+  namaKegiatan            String?   @map("nama_kegiatan") @db.Text
+  tanggalKegiatan         DateTime? @map("tanggal_kegiatan") @db.Date
+  waktuKegiatan           String?   @map("waktu_kegiatan") @db.VarChar(100)
+  tempatKegiatan          String?   @map("tempat_kegiatan") @db.Text
+  jenisBantuan            String?   @map("jenis_bantuan") @db.VarChar(100)
+  jenisBantuanLainnya     String?   @map("jenis_bantuan_lainnya") @db.Text
+  
+  // Survey
+  judulSurvey             String?   @map("judul_survey") @db.Text
+  deskripsiSurvey         String?   @map("deskripsi_survey") @db.LongText
+  targetResponden         String?   @map("target_responden") @db.Text
+  deadlineSurvey          DateTime? @map("deadline_survey") @db.Date
+  linkGdriveBrief         String?   @map("link_gdrive_brief") @db.Text
+  hadiahSurvey            String?   @map("hadiah_survey") @db.Text
+  
+  // Status Publikasi & Web Lainnya
+  statusPublikasi         Json?     @map("status_publikasi")
+  tujuanPemesanan         String?   @map("tujuan_pemesanan") @db.Text
+  linkOriginal            String?   @map("link_original") @db.Text
+  linkPengajuanFitur      String?   @map("link_pengajuan_fitur") @db.Text
+  linkPendaftaranEvent    String?   @map("link_pendaftaran_event") @db.Text
+  isHidden                Boolean   @default(false) @map("is_hidden")
+  
+  // Website Sub Type & Twibbon
+  websiteSubType          String?   @map("website_sub_type") @db.VarChar(50)
+  judulKampanye           String?   @map("judul_kampanye") @db.Text
+  namaUrlTwibbon          String?   @map("nama_url_twibbon") @db.Text
+  captionTwibbon          String?   @map("caption_twibbon") @db.LongText
+  formatTwibbon           String?   @map("format_twibbon") @db.VarChar(50)
+  warnaChromaKey          String?   @map("warna_chroma_key") @db.VarChar(50)
+  tanggalPublikasiTwibbon DateTime? @map("tanggal_publikasi_twibbon") @db.Date
+  linkAssetTwibbon        String?   @map("link_asset_twibbon") @db.Text
+
+  @@index([menuType], map: "idx_orders_menu_type")
+  @@index([status], map: "idx_orders_status")
+  @@index([createdAt], map: "idx_orders_created_at")
+  @@index([kementerian], map: "idx_orders_kementerian")
+  @@index([tanggalPublikasi], map: "idx_orders_tanggal_publikasi")
+  @@index([tanggalKegiatan], map: "idx_orders_tanggal_kegiatan")
+  @@index([tanggalPublikasiTwibbon], map: "idx_orders_tanggal_publikasi_twibbon")
+  @@map("orders")
+}
