@@ -136,13 +136,13 @@ export default async function Hero() {
         </div>
       </div>
 
-      {/* Bento Grid: Fitur Utama & Layanan Terpadu BEM */}
-      <div className="grid grid-cols-2 gap-3.5 w-full">
-        {/* Pemesanan Rismed (Merge 2 Kolom) */}
+      {/* Fitur Utama: Pemesanan & SOP Rismed */}
+      <div className="flex flex-col gap-3 w-full">
+        {/* Pemesanan Rismed */}
         <Link
           href="/app/rismed"
           className={cn(
-            "col-span-2 relative overflow-hidden p-5 rounded-[1.5rem]",
+            "relative overflow-hidden p-5 rounded-[1.5rem]",
             "bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white shadow-xs",
             "border border-violet-400/30",
             "transition-all duration-200 active:scale-[0.98] hover:shadow-md hover:shadow-violet-500/20 group",
@@ -180,7 +180,7 @@ export default async function Hero() {
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "col-span-2 flex items-center justify-between p-4 rounded-[1.5rem]",
+            "flex items-center justify-between p-4 rounded-[1.5rem]",
             "bg-white border border-slate-200 shadow-xs",
             "transition-all duration-200 active:scale-[0.98] hover:border-violet-300 hover:shadow-sm group"
           )}
@@ -205,97 +205,83 @@ export default async function Hero() {
             <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
           </div>
         </a>
+      </div>
 
+      {/* 4 Menu Cepat: Satu Baris Kesamping */}
+      <div className="grid grid-cols-4 gap-2 sm:gap-2.5 w-full">
         {/* 1. Short Link */}
         <Link
           href="/app/shortener"
           className={cn(
-            "flex flex-col justify-between h-34 p-4 rounded-[1.5rem]",
+            "flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl",
             "bg-white border border-slate-200 shadow-xs",
-            "transition-all duration-200 active:scale-95 hover:border-violet-300 hover:shadow-sm group"
+            "transition-all duration-200 active:scale-95 hover:border-violet-300 hover:shadow-xs group text-center gap-1.5"
           )}
         >
-          <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600 border border-violet-100 group-hover:bg-violet-600 group-hover:text-white transition-colors">
-              <Link2 className="w-4 h-4" strokeWidth={2.5} />
-            </div>
-            <div className="p-1 rounded-full text-slate-300 group-hover:text-violet-600 transition-colors">
-              <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
+          <div className="p-2 rounded-xl bg-violet-50 text-violet-600 border border-violet-100 group-hover:bg-violet-600 group-hover:text-white transition-colors">
+            <Link2 className="w-4 h-4" strokeWidth={2.5} />
           </div>
-          <div>
-            <h2 className="font-bold text-slate-900 text-sm mb-0.5">Short Link</h2>
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">Ubah URL panjang jadi rapi</p>
-          </div>
+          <span className="text-[11px] font-bold text-slate-800 tracking-tight leading-tight">
+            Short Link
+          </span>
         </Link>
 
         {/* 2. Twibbon BEM */}
         <Link
           href="/app/twibbons"
           className={cn(
-            "flex flex-col justify-between h-34 p-4 rounded-[1.5rem]",
+            "flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl",
             "bg-white border border-slate-200 shadow-xs",
-            "transition-all duration-200 active:scale-95 hover:border-amber-300 hover:shadow-sm group"
+            "transition-all duration-200 active:scale-95 hover:border-amber-300 hover:shadow-xs group text-center gap-1.5"
           )}
         >
-          <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+          <div className="relative">
+            <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 group-hover:bg-amber-500 group-hover:text-white transition-colors">
               <Sparkles className="w-4 h-4" strokeWidth={2.5} />
             </div>
-            <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-md">
-              {totalTwibbons} Frame
-            </span>
+            {totalTwibbons > 0 && (
+              <span className="absolute -top-1 -right-1 text-[8px] font-black bg-amber-500 text-white rounded-full px-1 leading-none py-0.5 shadow-2xs">
+                {totalTwibbons}
+              </span>
+            )}
           </div>
-          <div>
-            <h2 className="font-bold text-slate-900 text-sm mb-0.5">Twibbon BEM</h2>
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">Frame foto & video resmi</p>
-          </div>
+          <span className="text-[11px] font-bold text-slate-800 tracking-tight leading-tight">
+            Twibbon
+          </span>
         </Link>
 
         {/* 3. QR Code */}
         <Link
           href="/app/qrgenerator"
           className={cn(
-            "flex flex-col justify-between h-34 p-4 rounded-[1.5rem]",
+            "flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl",
             "bg-white border border-slate-200 shadow-xs",
-            "transition-all duration-200 active:scale-95 hover:border-sky-300 hover:shadow-sm group"
+            "transition-all duration-200 active:scale-95 hover:border-sky-300 hover:shadow-xs group text-center gap-1.5"
           )}
         >
-          <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 group-hover:bg-sky-500 group-hover:text-white transition-colors">
-              <QrCode className="w-4 h-4" strokeWidth={2.5} />
-            </div>
-            <div className="p-1 rounded-full text-slate-300 group-hover:text-sky-600 transition-colors">
-              <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
+          <div className="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+            <QrCode className="w-4 h-4" strokeWidth={2.5} />
           </div>
-          <div>
-            <h3 className="font-bold text-slate-900 text-sm mb-0.5">QR Code</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">Visual QR poster & cetak</p>
-          </div>
+          <span className="text-[11px] font-bold text-slate-800 tracking-tight leading-tight">
+            QR Code
+          </span>
         </Link>
 
         {/* 4. Database */}
         <Link
           href="/app/database"
           className={cn(
-            "flex flex-col justify-between h-34 p-4 rounded-[1.5rem]",
+            "flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl",
             "bg-white border border-slate-200 shadow-xs",
-            "transition-all duration-200 active:scale-95 hover:border-emerald-300 hover:shadow-sm group"
+            "transition-all duration-200 active:scale-95 hover:border-emerald-300 hover:shadow-xs group text-center gap-1.5"
           )}
         >
-          <div className="flex items-center justify-between">
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <Database className="w-4 h-4" strokeWidth={2.5} />
-            </div>
-            <div className="p-1 rounded-full text-slate-300 group-hover:text-emerald-600 transition-colors">
-              <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-            </div>
+          <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <Database className="w-4 h-4" strokeWidth={2.5} />
           </div>
-          <div>
-            <h3 className="font-bold text-slate-900 text-sm mb-0.5">Database</h3>
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">Kelola tautan & data klik</p>
-          </div>
+          <span className="text-[11px] font-bold text-slate-800 tracking-tight leading-tight">
+            Database
+          </span>
         </Link>
       </div>
 

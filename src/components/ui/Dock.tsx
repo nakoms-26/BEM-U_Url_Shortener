@@ -18,8 +18,12 @@ export default function Dock() {
   const pathname = usePathname();
   const validPaths = navItems.map((item) => item.href);
 
-  // Sembunyikan di halaman redirect [slug] dan 404
-  if (pathname !== "/app" && !pathname.startsWith("/app/")) {
+  // Sembunyikan di luar /app, halaman redirect [slug], 404, serta seluruh rute /rismed
+  if (
+    (pathname !== "/app" && !pathname.startsWith("/app/")) ||
+    pathname.startsWith("/app/rismed") ||
+    pathname.startsWith("/rismed")
+  ) {
     return null;
   }
 

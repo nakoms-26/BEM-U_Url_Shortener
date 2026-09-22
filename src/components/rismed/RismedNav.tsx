@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   FileEdit,
   Calendar,
@@ -12,7 +14,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const NAV_ITEMS = [
   { href: "/app/rismed", label: "Formulir", icon: FileEdit, exact: true },
@@ -25,44 +26,51 @@ const NAV_ITEMS = [
 
 export function RismedNav() {
   const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  // Pastikan tema selalu berada di light mode saat di halaman /rismed
+  useEffect(() => {
+    if (resolvedTheme === "dark") {
+      setTheme("light");
+    }
+  }, [resolvedTheme, setTheme]);
 
   return (
     <div className="w-full mb-6">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-200 dark:border-zinc-800">
         <div className="flex items-center gap-3">
-          {/* Logo with Light/Dark Mode Invert from Source Project */}
+          {/* Logo */}
           <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
             <Image
               src="/logo.svg"
               alt="Logo Rismed"
               width={38}
               height={38}
-              className="h-9 w-9 object-contain invert dark:invert-0 transition-all"
+              className="h-9 w-9 object-contain invert transition-all"
               priority
             />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-50 tracking-tight">
-              Layanan Rismed BEM
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Layanan Rismed BEM Unsoed
             </h1>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+            <p className="text-xs text-slate-500 font-medium">
               Pemesanan desain, publikasi, bantuan teknis, survey & twibbon
             </p>
           </div>
         </div>
 
-        {/* Right Controls: Theme Switcher & SOP Link */}
+        {/* Right Controls: SOP Link */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <ThemeSwitcher />
           <a
             href="https://drive.google.com/drive/folders/1LfBlUZEg-fnwreUZxDfg8txBNbfNmEeP"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/50 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-800 rounded-full transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 rounded-full transition-colors"
           >
             <span>Buka SOP Rismed</span>
-            <span className="text-[10px] bg-violet-200/70 dark:bg-violet-800 text-violet-800 dark:text-violet-200 px-1 rounded-sm">
+            <span className="text-[10px] bg-violet-200/70 text-violet-800 px-1 rounded-sm">
               Drive
             </span>
           </a>
