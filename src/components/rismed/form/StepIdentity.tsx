@@ -89,7 +89,7 @@ export function StepIdentity({ form }: StepProps) {
         <h2 className="text-xl font-semibold text-foreground">
           Konfirmasi SOP
         </h2>
-        <div className="flex items-start gradient-secondary p-4 rounded-lg">
+        <div className="flex items-start bg-gradient-to-r from-violet-600 to-indigo-600 p-4 rounded-xl shadow-xs text-white">
           <div className="flex items-center h-5 mt-1">
             <Controller
               control={control}
@@ -99,6 +99,7 @@ export function StepIdentity({ form }: StepProps) {
                   id="sudah_baca_sop"
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="border-white/50 data-checked:bg-white data-checked:text-violet-700 bg-white/10"
                 />
               )}
             />
@@ -109,21 +110,22 @@ export function StepIdentity({ form }: StepProps) {
               className="font-medium text-white cursor-pointer"
             >
               Saya sudah membaca dan memahami{" "}
-              <span className="font-bold text-white italic underline">
+              <span className="font-bold text-white underline underline-offset-2">
                 <a
                   href="https://drive.google.com/drive/folders/1LfBlUZEg-fnwreUZxDfg8txBNbfNmEeP"
-                  target="blank"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   SOP Pemesanan Konten
                 </a>
               </span>
             </Label>
-            <p className="text-white mt-1">
+            <p className="text-white/80 mt-1">
               Dengan mencentang ini, Anda setuju untuk mengikuti semua prosedur
               yang berlaku.
             </p>
             {errors.sudah_baca_sop && (
-              <p className="text-sm text-destructive mt-1 font-semibold">
+              <p className="text-sm text-rose-200 mt-1 font-semibold">
                 {errors.sudah_baca_sop.message}
               </p>
             )}

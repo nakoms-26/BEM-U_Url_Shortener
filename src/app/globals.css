@@ -129,6 +129,9 @@
 }
 
 @layer utilities {
+  .gradient-secondary {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  }
   /* Menyembunyikan scrollbar untuk Chrome, Safari dan Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;

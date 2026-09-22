@@ -175,7 +175,7 @@ export default function LihatPJPage() {
           </Link>
           <div className="text-center space-y-2">
             <div className="inline-flex items-center justify-center gap-2 mb-2">
-              <div className="p-2.5 rounded-xl gradient-secondary">
+              <div className="p-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 shadow-md shadow-violet-500/20">
                 <Users2 className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function LihatPJPage() {
                   className="overflow-hidden border border-border/60"
                 >
                   {/* Category Header */}
-                  <div className="gradient-secondary px-5 py-4 flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-white/15 text-white">
                       {config.icon}
                     </div>
@@ -233,7 +233,7 @@ export default function LihatPJPage() {
                       <h2 className="font-semibold text-base sm:text-lg text-white">
                         {PJ_CATEGORY_LABELS[category]}
                       </h2>
-                      <p className="text-xs sm:text-sm text-white/70">
+                      <p className="text-xs sm:text-sm text-white/85">
                         {config.description}
                       </p>
                     </div>
@@ -284,7 +284,7 @@ export default function LihatPJPage() {
                           >
                             <Button
                               size="sm"
-                              className="w-full sm:w-auto gap-1.5 rounded-full gradient-secondary text-white shadow-sm hover:opacity-90 transition-opacity text-xs sm:text-sm px-3 sm:px-4"
+                              className="w-full sm:w-auto gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors text-xs sm:text-sm px-3 sm:px-4 cursor-pointer"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
                               Chat PJ
