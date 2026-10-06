@@ -271,8 +271,8 @@ export function WebsiteTable({
       </div>
 
       {/* Desktop View: Table */}
-      <div className="hidden md:block overflow-x-auto w-full">
-        <table className="w-full min-w-[750px] table-fixed text-xs divide-y divide-slate-200">
+      <div className="hidden md:block overflow-x-auto w-full min-w-0">
+        <table className="w-full min-w-[850px] table-fixed text-xs divide-y divide-slate-200">
           <thead className="bg-slate-50/80">
             <tr>
               <th className="w-[18%] py-3 px-2 text-left font-bold text-slate-700">Waktu & Pemesan</th>

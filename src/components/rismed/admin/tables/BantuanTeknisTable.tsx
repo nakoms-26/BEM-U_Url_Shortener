@@ -240,8 +240,8 @@ export function BantuanTeknisTable({
       {/* ========================================================================= */}
       {/* DESKTOP TABLE VIEW (hidden md:block) */}
       {/* ========================================================================= */}
-      <div className="hidden md:block overflow-x-auto w-full">
-        <table className="w-full table-fixed min-w-[750px] text-xs divide-y divide-slate-200">
+      <div className="hidden md:block overflow-x-auto w-full min-w-0">
+        <table className="w-full table-fixed min-w-[850px] text-xs divide-y divide-slate-200">
           <thead className="bg-slate-50/80">
             <tr>
               <th className="w-[20%] py-3 px-2 text-left font-bold text-slate-700">

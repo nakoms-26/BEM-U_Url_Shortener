@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
 
 jobs:
   deploy:
@@ -39,7 +40,9 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd ~/domains/unsoed.link/public_nodejs
-            git pull origin main
+            git fetch origin
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            git pull origin "$CURRENT_BRANCH" || git pull origin master || git pull origin main
             npm ci --omit=dev
             # Hapus build lama agar tidak ada konflik CSS/static files
             rm -rf .next
