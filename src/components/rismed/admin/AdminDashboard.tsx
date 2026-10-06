@@ -48,6 +48,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DatePicker03 } from "@/components/rismed/shadcn-studio/date-picker/date-picker-03";
 import { AdminDashboardSkeleton } from "@/components/rismed/shared/Skeletons";
+import { cn } from "@/lib/utils";
 import {
   Filter,
   AlertTriangle,
@@ -57,6 +58,8 @@ import {
   ClipboardList,
   BarChart3,
   UserCog,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 import { DesainPublikasiTable } from "./tables/DesainPublikasiTable";
@@ -109,6 +112,20 @@ export function AdminDashboard() {
   // Pagination states
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState("25");
+
+  // Mobile filter toggle
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
+
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (filterKementerian && filterKementerian !== "all-kementerian") count++;
+    if (filterStatus && filterStatus !== "all-status") count++;
+    if (filterDate) count++;
+    if (filterPlatform && filterPlatform !== "all-platform" && activeTab === "desain_publikasi") count++;
+    if (filterVisibility && filterVisibility !== "all-visibility") count++;
+    if (sortBy !== "waktu_pemesanan") count++;
+    return count;
+  }, [filterKementerian, filterStatus, filterDate, filterPlatform, filterVisibility, activeTab, sortBy]);
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -476,40 +493,38 @@ export function AdminDashboard() {
         onValueChange={(v) => setActiveTab(v as DashboardTab)}
         className="w-full"
       >
-        <div className="flex justify-center mb-6">
-          <TabsList className="grid grid-cols-2 lg:grid-cols-6 mb-5 md:mb-0 md:grid-cols-3 h-auto p-1 bg-muted">
+        {/* Navigation Tabs - Horizontal Scrollable on Mobile */}
+        <div className="flex justify-center mb-4 sm:mb-6">
+          <TabsList className="flex items-center gap-1.5 overflow-x-auto w-full p-1 bg-slate-100/90 dark:bg-zinc-800/80 rounded-2xl no-scrollbar justify-start sm:justify-center">
             {MENU_OPTIONS.map((menu) => (
               <TabsTrigger
                 key={menu.id}
                 value={menu.id}
-                className="flex items-center gap-2 py-2 px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
               >
-                <MenuIcon icon={menu.icon} className="w-4 h-4" />
-                <span className="hidden sm:inline">{menu.label}</span>
-                <span className="sm:hidden">{menu.label.split(" ")[0]}</span>
-                <span className="ml-1 bg-muted-foreground/10 px-1.5 py-0.5 rounded-full text-[10px]">
+                <MenuIcon icon={menu.icon} className="w-3.5 h-3.5" />
+                <span className="whitespace-nowrap">{menu.label}</span>
+                <span className="ml-1 bg-slate-200/80 dark:bg-zinc-700/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
                   {menuCounts[menu.id]}
                 </span>
               </TabsTrigger>
             ))}
             <TabsTrigger
               value="statistik"
-              className="flex items-center gap-2 py-2 px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
             >
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">Statistik</span>
-              <span className="sm:hidden">Stat</span>
-              <span className="ml-1 bg-muted-foreground/10 px-1.5 py-0.5 rounded-full text-[10px]">
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="whitespace-nowrap">Statistik</span>
+              <span className="ml-1 bg-slate-200/80 dark:bg-zinc-700/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
                 {orders.length}
               </span>
             </TabsTrigger>
             <TabsTrigger
               value="kelola_pj"
-              className="flex items-center gap-2 py-2 px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
             >
-              <UserCog className="w-4 h-4" />
-              <span className="hidden sm:inline">Kelola PJ</span>
-              <span className="sm:hidden">PJ</span>
+              <UserCog className="w-3.5 h-3.5" />
+              <span className="whitespace-nowrap">Kelola PJ</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -518,17 +533,55 @@ export function AdminDashboard() {
           <>
             <CollisionWarning />
 
-            <Card className="mb-6">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  <CardTitle className="text-base font-semibold">
-                    Filter & Sortir
-                  </CardTitle>
+            {/* Filter Section with Mobile Collapsible */}
+            <Card className="mb-4 sm:mb-6 border-slate-200 shadow-2xs">
+              <CardHeader className="p-3 sm:p-5 pb-2 sm:pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-violet-600" />
+                    <CardTitle className="text-sm sm:text-base font-bold text-slate-900">
+                      Filter & Sortir
+                    </CardTitle>
+                    {activeFilterCount > 0 && (
+                      <span className="bg-violet-100 text-violet-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {activeFilterCount} aktif
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:hidden">
+                    {activeFilterCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="h-7 px-2 text-[10px] text-slate-500 hover:text-slate-800"
+                      >
+                        Reset
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMobileFilters(!showMobileFilters)}
+                      className="h-7 px-2.5 text-xs font-semibold rounded-lg flex items-center gap-1"
+                    >
+                      {showMobileFilters ? "Tutup" : "Filter"}
+                      {showMobileFilters ? (
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <CardContent
+                className={cn(
+                  "p-3 sm:p-5 pt-0 sm:pt-0",
+                  !showMobileFilters && "hidden sm:block"
+                )}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4 pt-1 sm:pt-0">
                   <div className="space-y-1.5">
                     <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                       Kementerian/Biro
@@ -537,7 +590,7 @@ export function AdminDashboard() {
                       value={filterKementerian}
                       onValueChange={setFilterKementerian}
                     >
-                      <SelectTrigger className="h-9 text-xs w-full">
+                      <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                         <SelectValue placeholder="Semua" />
                       </SelectTrigger>
                       <SelectContent>
@@ -559,7 +612,7 @@ export function AdminDashboard() {
                       setDate={(date) =>
                         setFilterDate(date ? format(date, "yyyy-MM-dd") : "")
                       }
-                      className="h-9 text-xs w-full"
+                      className="h-9 text-xs w-full rounded-xl"
                       placeholder="Semua Tanggal"
                     />
                   </div>
@@ -572,7 +625,7 @@ export function AdminDashboard() {
                         value={filterPlatform}
                         onValueChange={setFilterPlatform}
                       >
-                        <SelectTrigger className="h-9 text-xs w-full">
+                        <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                           <SelectValue placeholder="Semua" />
                         </SelectTrigger>
                         <SelectContent>
@@ -594,7 +647,7 @@ export function AdminDashboard() {
                       value={filterStatus}
                       onValueChange={setFilterStatus}
                     >
-                      <SelectTrigger className="h-9 text-xs w-full">
+                      <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                         <SelectValue placeholder="Semua" />
                       </SelectTrigger>
                       <SelectContent>
@@ -615,7 +668,7 @@ export function AdminDashboard() {
                       value={filterVisibility}
                       onValueChange={setFilterVisibility}
                     >
-                      <SelectTrigger className="h-9 text-xs w-full">
+                      <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                         <SelectValue placeholder="Semua" />
                       </SelectTrigger>
                       <SelectContent>
@@ -635,7 +688,7 @@ export function AdminDashboard() {
                       value={sortBy}
                       onValueChange={(v) => setSortBy(v as SortOption)}
                     >
-                      <SelectTrigger className="h-9 text-xs w-full">
+                      <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                         <SelectValue placeholder="Urutkan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -652,7 +705,7 @@ export function AdminDashboard() {
                     <Button
                       variant="outline"
                       onClick={clearFilters}
-                      className="h-9 w-full text-xs font-medium"
+                      className="h-9 w-full text-xs font-semibold rounded-xl"
                     >
                       Reset Filter
                     </Button>
@@ -661,19 +714,26 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3 mb-4">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold">
-                  {MENU_OPTIONS.find((m) => m.id === activeTab)?.label} Orders
+            <Card className="border-slate-200 shadow-2xs overflow-hidden">
+              <CardHeader className="p-3.5 sm:p-5 border-b border-slate-100">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg font-black text-slate-900">
+                  <MenuIcon
+                    icon={MENU_OPTIONS.find((m) => m.id === activeTab)?.icon || ""}
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-violet-600"
+                  />
+                  <span>{MENU_OPTIONS.find((m) => m.id === activeTab)?.label} Orders</span>
+                  <span className="ml-auto bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                    {filteredOrders.length} Pesanan
+                  </span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-2 sm:p-4 md:p-5">
+              <CardContent className="p-0 sm:p-4">
                 <div className="w-full">{renderTable()}</div>
 
                 {/* Pagination Controls */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-0 sm:mt-6 border-t sm:border-t-0 border-slate-100">
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                    <span className="text-xs text-slate-500 font-medium">
                       Baris per halaman:
                     </span>
                     <Select
@@ -683,7 +743,7 @@ export function AdminDashboard() {
                         setCurrentPage(1);
                       }}
                     >
-                      <SelectTrigger className="h-8 w-[80px] text-xs">
+                      <SelectTrigger className="h-8 w-[80px] text-xs rounded-lg">
                         <SelectValue placeholder="25" />
                       </SelectTrigger>
                       <SelectContent>
@@ -696,11 +756,11 @@ export function AdminDashboard() {
                   </div>
 
                   {itemsPerPage !== "all" && totalPages > 1 && (
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3">
+                      <span className="text-xs text-slate-500 font-medium">
                         Halaman {currentPage} dari {totalPages}
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Button
                           variant="outline"
                           size="sm"
@@ -708,6 +768,7 @@ export function AdminDashboard() {
                             setCurrentPage((p) => Math.max(1, p - 1))
                           }
                           disabled={currentPage === 1}
+                          className="h-8 px-3 text-xs rounded-lg font-semibold"
                         >
                           Prev
                         </Button>
@@ -718,6 +779,7 @@ export function AdminDashboard() {
                             setCurrentPage((p) => Math.min(totalPages, p + 1))
                           }
                           disabled={currentPage === totalPages}
+                          className="h-8 px-3 text-xs rounded-lg font-semibold"
                         >
                           Next
                         </Button>

@@ -68,7 +68,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
-                className="h-10 text-sm rounded-xl border-slate-200 focus-visible:ring-violet-500"
+                className="h-11 sm:h-10 text-base sm:text-sm rounded-xl border-slate-200 focus-visible:ring-violet-500"
                 required
               />
             </div>
@@ -82,7 +82,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan password admin"
-                className="h-10 text-sm rounded-xl border-slate-200 focus-visible:ring-violet-500"
+                className="h-11 sm:h-10 text-base sm:text-sm rounded-xl border-slate-200 focus-visible:ring-violet-500"
                 required
                 autoFocus
               />
@@ -96,7 +96,7 @@ export function AdminLogin({ onSuccess }: AdminLoginProps) {
 
             <Button
               type="submit"
-              className="w-full h-10 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-xs active:scale-[0.98] transition-all"
+              className="w-full h-11 sm:h-10 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm shadow-xs active:scale-[0.98] transition-all"
               disabled={isLoading}
             >
               {isLoading ? (

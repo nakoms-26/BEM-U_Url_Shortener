@@ -3,7 +3,8 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { parseDateOnly } from "@/lib/rismed/date";
-import { helperDate, getStatusColor } from "@/lib/rismed/order-utils";
+import { helperDate, getStatusColor, getWaUrl } from "@/lib/rismed/order-utils";
+import { cn } from "@/lib/utils";
 import { DesainPublikasiOrder, Order, OrderStatus } from "@/lib/rismed/types";
 import {
   STATUS_OPTIONS,
@@ -35,6 +36,7 @@ import {
   FileText,
   FolderArchive,
   Music,
+  Phone,
 } from "lucide-react";
 
 interface DesainPublikasiTableProps {
@@ -66,7 +68,335 @@ export function DesainPublikasiTable({
 
   return (
     <div className="w-full">
-      <table className="w-full table-fixed text-xs divide-y divide-slate-200">
+      {/* Mobile View: Cards */}
+      <div className="block md:hidden p-3 space-y-3">
+        {orders.length === 0 ? (
+          <div className="text-center py-8 text-xs text-muted-foreground bg-slate-50 rounded-xl">
+            Tidak ada pesanan desain publikasi.
+          </div>
+        ) : (
+          orders.map((order) => {
+            const isExpanded = expandedOrderIds.includes(order.id);
+            const collision = hasCollision(order);
+            const waUrl = getWaUrl(order.nomor_whatsapp);
+
+            return (
+              <div
+                key={order.id}
+                className={cn(
+                  "rounded-2xl border p-4 bg-white transition-all shadow-xs space-y-3",
+                  collision ? "border-red-300 bg-red-50/20" : "border-slate-200"
+                )}
+              >
+                {/* Top Bar: Created At, Name, Kementerian, and Status dropdown */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-semibold text-slate-400" suppressHydrationWarning>
+                      {helperDate(order.created_at)}
+                    </div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">
+                      {order.nama}
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                      {order.kementerian}
+                    </div>
+                    {order.nomor_whatsapp && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg mt-1 transition-colors"
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>{order.nomor_whatsapp}</span>
+                      </a>
+                    )}
+                    {order.is_hidden && (
+                      <div className="mt-1">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold inline-flex items-center gap-1">
+                          <EyeOff className="w-2.5 h-2.5" />
+                          Tersembunyi
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status Select for Mobile */}
+                  <div className="shrink-0">
+                    <Select
+                      value={order.status || "new"}
+                      onValueChange={(v) => updateStatus(order.id, v as OrderStatus)}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "h-8 text-xs px-2.5 rounded-full font-bold border-0 shadow-2xs",
+                          getStatusColor(order.status)
+                        )}
+                      >
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Collision alert */}
+                {collision && (
+                  <div className="flex items-center gap-1.5 p-2 rounded-xl bg-red-100 text-red-800 text-[11px] font-bold">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-600" />
+                    <span>Peringatan: Jadwal upload tabrakan!</span>
+                  </div>
+                )}
+
+                {/* Title & Platforms */}
+                <div className="space-y-1.5">
+                  <div className="font-bold text-slate-900 text-sm leading-snug">
+                    {order.judul_desain}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {order.platform_publikasi?.map((p) => (
+                      <span
+                        key={p}
+                        className="bg-violet-50 text-violet-700 border border-violet-100 px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                      >
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Assets Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  {order.link_file_konten && (
+                    <a
+                      href={order.link_file_konten}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-xl transition-colors"
+                    >
+                      <FolderArchive className="w-3 h-3 text-blue-600" />
+                      <span>Files Drive</span>
+                    </a>
+                  )}
+                  {order.link_caption_docs && (
+                    <a
+                      href={order.link_caption_docs}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-xl transition-colors"
+                    >
+                      <FileText className="w-3 h-3 text-indigo-600" />
+                      <span>Caption Docs</span>
+                    </a>
+                  )}
+                  {order.request_lagu && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-xl truncate max-w-full">
+                      <Music className="w-3 h-3 shrink-0" />
+                      <span className="truncate">{order.request_lagu}</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Mobile Form Controls: Deadline & Waktu */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                    Jadwal Publikasi:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <DatePicker03
+                      date={parseDateOnly(order.tanggal_publikasi)}
+                      setDate={(date) => {
+                        const formatted = date ? format(date, "yyyy-MM-dd") : "";
+                        if (formatted !== order.tanggal_publikasi) {
+                          updateField(order.id, "tanggal_publikasi", formatted);
+                        }
+                      }}
+                      className="h-8 text-xs w-full bg-white rounded-lg"
+                    />
+                    <Select
+                      defaultValue={order.waktu_publikasi}
+                      onValueChange={(v) => updateField(order.id, "waktu_publikasi", v)}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-full bg-white rounded-lg">
+                        <SelectValue placeholder="Waktu Publikasi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {WAKTU_PUBLIKASI_OPTIONS.map((w) => (
+                          <SelectItem key={w} value={w}>
+                            {w}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Mobile Form Controls: Checklist Status Publikasi */}
+                {order.platform_publikasi && order.platform_publikasi.length > 0 && (
+                  <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Checklist Upload Publikasi:
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {order.platform_publikasi.map((platform) => {
+                        const isChecked = order.status_publikasi?.[platform] || false;
+                        return (
+                          <label
+                            key={platform}
+                            htmlFor={`mob-status-${order.id}-${platform}`}
+                            className={cn(
+                              "flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer select-none transition-colors",
+                              isChecked
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                                : "bg-white border-slate-200 text-slate-700"
+                            )}
+                          >
+                            <Checkbox
+                              id={`mob-status-${order.id}-${platform}`}
+                              checked={isChecked}
+                              onCheckedChange={async (checked) => {
+                                const newStatusPublikasi = {
+                                  ...(order.status_publikasi || {}),
+                                  [platform]: checked === true,
+                                };
+                                try {
+                                  const res = await updateOrderAction(order.id, {
+                                    status_publikasi: newStatusPublikasi,
+                                  });
+                                  if (!res.success) throw new Error(res.error);
+                                  setOrders((prev) =>
+                                    prev.map((o) =>
+                                      o.id === order.id
+                                        ? ({ ...o, status_publikasi: newStatusPublikasi } as Order)
+                                        : o
+                                    )
+                                  );
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="h-4 w-4"
+                            />
+                            <span className={cn("text-xs font-semibold leading-tight truncate", isChecked && "line-through opacity-80")}>
+                              {platform}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Form Controls: Link Desain Selesai */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                    Link Hasil Desain Selesai (Drive):
+                  </span>
+                  <LinkDesainCell
+                    orderId={order.id}
+                    initialValue={order.link_desain_selesai || ""}
+                    updateField={updateField}
+                  />
+                </div>
+
+                {/* Footer Actions: Sembunyikan & Hapus */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleDetail(order.id)}
+                    className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
+                  >
+                    {isExpanded ? (
+                      <>
+                        <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                        Tutup Rincian
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                        Rincian Lengkap
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleHideOrder(order.id, !!order.is_hidden)}
+                      className={cn(
+                        "h-7 px-2.5 text-xs font-semibold rounded-lg",
+                        order.is_hidden
+                          ? "text-amber-700 bg-amber-50 border-amber-200"
+                          : "text-slate-600"
+                      )}
+                    >
+                      {order.is_hidden ? (
+                        <>
+                          <Eye className="w-3 h-3 mr-1" /> Tampilkan
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3 h-3 mr-1" /> Sembunyikan
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteOrder(order.id)}
+                      className="h-7 px-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-lg"
+                      title="Hapus Pesanan"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" /> Hapus
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="p-3 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-100">
+                    <div>
+                      <span className="font-semibold text-slate-600">Judul Lengkap:</span>
+                      <p className="text-slate-900 mt-0.5">{order.judul_desain}</p>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-600">File Konten:</span>
+                      <p className="mt-0.5">
+                        {order.link_file_konten ? (
+                          <a href={order.link_file_konten} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
+                            <ExternalLink className="w-3 h-3" /> Buka Google Drive
+                          </a>
+                        ) : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-slate-600">Caption Docs:</span>
+                      <p className="mt-0.5">
+                        {order.link_caption_docs ? (
+                          <a href={order.link_caption_docs} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
+                            <ExternalLink className="w-3 h-3" /> Buka Google Docs
+                          </a>
+                        ) : "-"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop View: Table */}
+      <div className="hidden md:block overflow-x-auto w-full">
+        <table className="w-full min-w-[850px] table-fixed text-xs divide-y divide-slate-200">
         <thead className="bg-slate-50/80">
           <tr>
             <th className="w-[16%] py-3 px-2 text-left font-bold text-slate-700">
@@ -456,6 +786,7 @@ export function DesainPublikasiTable({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

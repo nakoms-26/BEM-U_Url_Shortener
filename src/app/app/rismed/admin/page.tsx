@@ -57,12 +57,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="w-full flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6 pb-4 border-b border-slate-100">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
             Dashboard Kelola Pesanan & PJ
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">
             Manajemen status pesanan, penugasan PJ, dan pembaruan hasil desain.
           </p>
         </div>
@@ -70,10 +70,11 @@ export default function AdminDashboardPage() {
           variant="outline"
           size="sm"
           onClick={handleLogout}
-          className="text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl h-9 self-start sm:self-auto active:scale-95 transition-all"
+          className="text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl h-9 shrink-0 active:scale-95 transition-all"
         >
           <LogOut className="w-3.5 h-3.5 mr-1.5" />
-          Keluar Admin
+          <span className="hidden sm:inline">Keluar Admin</span>
+          <span className="sm:hidden">Keluar</span>
         </Button>
       </div>
 

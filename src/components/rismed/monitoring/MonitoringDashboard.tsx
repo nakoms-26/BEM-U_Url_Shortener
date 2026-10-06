@@ -39,6 +39,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MonitoringTableSkeleton } from "@/components/rismed/shared/Skeletons";
+import { cn } from "@/lib/utils";
 import {
   ExternalLink,
   Filter,
@@ -49,9 +50,19 @@ import {
   Globe,
   Video,
   ClipboardList,
+  Calendar,
+  Clock,
+  FileText,
+  FolderArchive,
+  Music,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
-import { TwibbonDetailRow } from "@/components/rismed/shared/TwibbonDetailRow";
+import {
+  TwibbonDetailRow,
+  TwibbonDetailCardContent,
+} from "@/components/rismed/shared/TwibbonDetailRow";
 
 const MenuIcon = ({
   icon,
@@ -137,6 +148,19 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
   // Pagination states
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState("25");
+
+  // Mobile filter collapse state
+  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
+
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (filterKementerian !== "all-kementerian") count++;
+    if (filterStatus !== "all-status") count++;
+    if (filterDate) count++;
+    if (filterPlatform !== "all-platform" && activeTab === "desain_publikasi") count++;
+    if (sortBy !== "waktu_pemesanan") count++;
+    return count;
+  }, [filterKementerian, filterStatus, filterDate, filterPlatform, activeTab, sortBy]);
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -842,26 +866,514 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
     }
   };
 
+  // Render mobile cards based on active tab
+  const renderMobileCards = () => {
+    switch (activeTab) {
+      case "desain_publikasi": {
+        const desainOrders = paginatedOrders.filter(isDesainPublikasi);
+        return (
+          <div className="space-y-3">
+            {desainOrders.map((order) => {
+              const isExpanded = expandedDesainOrderIds.includes(order.id);
+              const collision = hasCollision(order);
+
+              return (
+                <div
+                  key={order.id}
+                  className={cn(
+                    "rounded-2xl border p-4 bg-white transition-all shadow-xs space-y-3",
+                    collision
+                      ? "border-red-300 bg-red-50/20"
+                      : "border-slate-200"
+                  )}
+                >
+                  {/* Top Bar: Created At & Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] font-semibold text-slate-400" suppressHydrationWarning>
+                        {helperDate(order.created_at)}
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {order.nama}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        {order.kementerian}
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 tracking-wide",
+                        getStatusColor(order.status)
+                      )}
+                    >
+                      {getStatusLabel(order.status)}
+                    </span>
+                  </div>
+
+                  {/* Collision alert if any */}
+                  {collision && (
+                    <div className="flex items-center gap-1.5 p-2 rounded-xl bg-red-100 text-red-800 text-[11px] font-bold">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-600" />
+                      <span>Peringatan: Jadwal upload tabrakan!</span>
+                    </div>
+                  )}
+
+                  {/* Main: Title & Platform badges */}
+                  <div className="space-y-1.5">
+                    <div className="font-bold text-slate-900 text-sm leading-snug">
+                      {order.judul_desain}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {order.platform_publikasi?.map((p) => (
+                        <span
+                          key={p}
+                          className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Schedule & Deadline */}
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span className="font-medium text-slate-700">
+                      {formatDate(order.tanggal_publikasi)}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span className="text-slate-600 text-[11px]">
+                      {order.waktu_publikasi}
+                    </span>
+                  </div>
+
+                  {/* Quick Action buttons */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {order.link_desain_selesai && (
+                      <a
+                        href={order.link_desain_selesai}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all shadow-xs"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Buka Desain Selesai</span>
+                      </a>
+                    )}
+                    {order.link_file_konten && (
+                      <a
+                        href={order.link_file_konten}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                      >
+                        <FolderArchive className="w-3 h-3 text-slate-500" />
+                        <span>File Konten</span>
+                      </a>
+                    )}
+                    {order.link_caption_docs && (
+                      <a
+                        href={order.link_caption_docs}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                      >
+                        <FileText className="w-3 h-3 text-slate-500" />
+                        <span>Caption Docs</span>
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Collapsible Detail Toggle */}
+                  <div className="pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => toggleDesainOrderDetail(order.id)}
+                      className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
+                    >
+                      {isExpanded ? (
+                        <>
+                          <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                          Sembunyikan Rincian
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                          Lihat Rincian Lengkap
+                        </>
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="mt-2 p-3 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-100">
+                        <div>
+                          <span className="font-semibold text-slate-600">Judul Lengkap:</span>
+                          <p className="text-slate-900 mt-0.5">{order.judul_desain}</p>
+                        </div>
+                        {order.request_lagu && (
+                          <div className="flex items-center gap-1.5 text-purple-700 font-medium">
+                            <Music className="w-3.5 h-3.5 shrink-0" />
+                            <span>Request Lagu: {order.request_lagu}</span>
+                          </div>
+                        )}
+                        {order.status_publikasi && Object.keys(order.status_publikasi).length > 0 && (
+                          <div>
+                            <span className="font-semibold text-slate-600 block mb-1">Status Publikasi:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {Object.entries(order.status_publikasi).map(([plat, isDone]) => (
+                                <span
+                                  key={plat}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded text-[10px] font-semibold",
+                                    isDone
+                                      ? "bg-emerald-100 text-emerald-800"
+                                      : "bg-slate-100 text-slate-600"
+                                  )}
+                                >
+                                  {plat}: {isDone ? "Sudah Diupload" : "Belum"}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      case "website": {
+        const webOrders = paginatedOrders.filter(isWebsite);
+        return (
+          <div className="space-y-3">
+            {webOrders.map((order) => {
+              const isExpanded = expandedWebsiteOrderIds.includes(order.id);
+
+              return (
+                <div
+                  key={order.id}
+                  className="rounded-2xl border border-slate-200 p-4 bg-white shadow-xs space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] font-semibold text-slate-400" suppressHydrationWarning>
+                        {helperDate(order.created_at)}
+                      </div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">
+                        {order.nama}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium">
+                        {order.kementerian}
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 tracking-wide",
+                        getStatusColor(order.status)
+                      )}
+                    >
+                      {getStatusLabel(order.status)}
+                    </span>
+                  </div>
+
+                  <div>
+                    {order.website_sub_type && (
+                      <span
+                        className={cn(
+                          "inline-block text-[10px] px-2 py-0.5 rounded-full font-bold mb-1.5",
+                          order.website_sub_type === "twibbon"
+                            ? "bg-purple-100 text-purple-700"
+                            : order.website_sub_type === "shortlink"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-blue-100 text-blue-700"
+                        )}
+                      >
+                        {order.website_sub_type === "twibbon"
+                          ? "Twibbon"
+                          : order.website_sub_type === "shortlink"
+                          ? "Shortlink"
+                          : "Laman"}
+                      </span>
+                    )}
+                    <div className="font-bold text-slate-900 text-sm leading-snug">
+                      {order.website_sub_type === "twibbon"
+                        ? order.judul_kampanye || "-"
+                        : order.tujuan_pemesanan || "-"}
+                    </div>
+                  </div>
+
+                  {/* Links */}
+                  <div className="flex flex-col gap-1.5 text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                    {order.link_original && (
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-slate-500 font-semibold shrink-0">Link Asli:</span>
+                        <a
+                          href={order.link_original}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline truncate inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{order.link_original}</span>
+                        </a>
+                      </div>
+                    )}
+                    {order.custom_shortlink && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500 font-semibold shrink-0">Shortlink:</span>
+                        <span className="font-mono text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                          {order.custom_shortlink}
+                        </span>
+                      </div>
+                    )}
+                    {order.link_pengajuan_fitur && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500 font-semibold shrink-0">Fitur:</span>
+                        <a
+                          href={order.link_pengajuan_fitur}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Buka Fitur
+                        </a>
+                      </div>
+                    )}
+                    {order.link_pendaftaran_event && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500 font-semibold shrink-0">Event:</span>
+                        <a
+                          href={order.link_pendaftaran_event}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Buka Event
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {order.website_sub_type === "twibbon" && (
+                    <div className="pt-1 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => toggleWebsiteOrderDetail(order.id)}
+                        className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
+                      >
+                        {isExpanded ? (
+                          <>
+                            <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                            Sembunyikan Rincian Twibbon
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                            Lihat Rincian Twibbon
+                          </>
+                        )}
+                      </button>
+                      {isExpanded && (
+                        <div className="mt-2 p-3 bg-purple-50/50 rounded-xl border border-purple-100">
+                          <TwibbonDetailCardContent order={order} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      case "bantuan_teknis": {
+        const tekOrders = paginatedOrders.filter(isBantuanTeknis);
+        return (
+          <div className="space-y-3">
+            {tekOrders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-2xl border border-slate-200 p-4 bg-white shadow-xs space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-semibold text-slate-400" suppressHydrationWarning>
+                      {helperDate(order.created_at)}
+                    </div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">
+                      {order.nama}
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                      {order.kementerian}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 tracking-wide",
+                      getStatusColor(order.status)
+                    )}
+                  >
+                    {getStatusLabel(order.status)}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-[10px] font-bold mb-1.5">
+                    {getJenisBantuanLabel(order.jenis_bantuan)}
+                  </span>
+                  <div className="font-bold text-slate-900 text-sm leading-snug">
+                    {order.nama_kegiatan}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span className="font-medium text-slate-700">
+                      {formatDate(order.tanggal_kegiatan)}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span className="text-slate-600 text-[11px]">
+                      {order.waktu_kegiatan}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span>{order.tempat_kegiatan}</span>
+                  </div>
+                </div>
+
+                {order.jenis_bantuan === "lainnya" && order.jenis_bantuan_lainnya && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                    <span className="font-semibold text-slate-600">Catatan Tambahan:</span>
+                    <p className="text-slate-700 mt-0.5">{order.jenis_bantuan_lainnya}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      case "survey": {
+        const surveyOrders = paginatedOrders.filter(isSurvey);
+        return (
+          <div className="space-y-3">
+            {surveyOrders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-2xl border border-slate-200 p-4 bg-white shadow-xs space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-[11px] font-semibold text-slate-400" suppressHydrationWarning>
+                      {helperDate(order.created_at)}
+                    </div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">
+                      {order.nama}
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                      {order.kementerian}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 tracking-wide",
+                      getStatusColor(order.status)
+                    )}
+                  >
+                    {getStatusLabel(order.status)}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="font-bold text-slate-900 text-sm leading-snug">
+                    {order.judul_survey}
+                  </div>
+                  {order.deskripsi_survey && (
+                    <p className="text-xs text-slate-600 line-clamp-3">
+                      {order.deskripsi_survey}
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                      Target
+                    </span>
+                    <span className="font-medium text-slate-800">
+                      {order.target_responden || "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                      Deadline
+                    </span>
+                    <span className="font-medium text-slate-800">
+                      {formatDate(order.deadline_survey)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded text-[10px] font-bold",
+                      order.hadiah_survey === "ada"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-100 text-slate-600"
+                    )}
+                  >
+                    Hadiah: {order.hadiah_survey === "ada" ? "Ada" : "Tidak"}
+                  </span>
+
+                  {order.link_gdrive_brief && (
+                    <a
+                      href={order.link_gdrive_brief}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Buka Brief Drive</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full">
       <Tabs
         defaultValue="desain_publikasi"
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as MenuType)}
         className="w-full"
       >
-        <div className="flex justify-center mb-6">
-          <TabsList className="grid grid-cols-2 mb-5 md:grid-cols-4 h-auto md:mb-0  rounded-lg  ">
+        {/* Navigation Tabs - Horizontal Scroll on Mobile */}
+        <div className="flex justify-center mb-4 sm:mb-6">
+          <TabsList className="flex items-center gap-1.5 overflow-x-auto w-full p-1 bg-slate-100/90 dark:bg-zinc-800/80 rounded-2xl no-scrollbar justify-start sm:justify-center">
             {MENU_OPTIONS.map((menu) => (
               <TabsTrigger
                 key={menu.id}
                 value={menu.id}
-                className="flex items-center justify-between gap-2 py-2 px-4 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
               >
-                <MenuIcon icon={menu.icon} className="w-4 h-4" />
-                <span className="hidden sm:inline">{menu.label}</span>
-                <span className="sm:hidden">{menu.label.split(" ")[0]}</span>
-                <span className="ml-1 bg-muted-foreground/10 px-1.5 py-0.5 rounded-full text-[10px]">
+                <MenuIcon icon={menu.icon} className="w-3.5 h-3.5" />
+                <span className="whitespace-nowrap">{menu.label}</span>
+                <span className="ml-1 bg-slate-200/80 dark:bg-zinc-700/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
                   {menuCounts[menu.id]}
                 </span>
               </TabsTrigger>
@@ -870,22 +1382,57 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
         </div>
 
         {/* Collision Warning */}
-
-        {/* Collision Warning */}
         <CollisionWarning />
 
-        {/* Filter Section */}
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-primary " />
-              <CardTitle className="text-base font-semibold">
-                Filter & Sortir
-              </CardTitle>
+        {/* Filter Section with Mobile Collapsible Support */}
+        <Card className="mb-4 sm:mb-6 border-slate-200 shadow-2xs">
+          <CardHeader className="p-3 sm:p-5 pb-2 sm:pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-violet-600" />
+                <CardTitle className="text-sm sm:text-base font-bold text-slate-900">
+                  Filter & Sortir
+                </CardTitle>
+                {activeFilterCount > 0 && (
+                  <span className="bg-violet-100 text-violet-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {activeFilterCount} aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 sm:hidden">
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-7 px-2 text-[10px] text-slate-500 hover:text-slate-800"
+                  >
+                    Reset
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="h-7 px-2.5 text-xs font-semibold rounded-lg flex items-center gap-1"
+                >
+                  {showMobileFilters ? "Tutup" : "Filter"}
+                  {showMobileFilters ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <CardContent
+            className={cn(
+              "p-3 sm:p-5 pt-0 sm:pt-0",
+              !showMobileFilters && "hidden sm:block"
+            )}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 pt-1 sm:pt-0">
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">
                   Kementerian/Biro
@@ -894,7 +1441,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                   value={filterKementerian}
                   onValueChange={setFilterKementerian}
                 >
-                  <SelectTrigger className="h-9 text-xs w-full">
+                  <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                     <SelectValue placeholder="Semua" />
                   </SelectTrigger>
                   <SelectContent>
@@ -915,7 +1462,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                   date={filterDate}
                   setDate={setFilterDate}
                   placeholder="Pilih tanggal"
-                  className="text-xs"
+                  className="text-xs rounded-xl"
                 />
               </div>
               {activeTab === "desain_publikasi" && (
@@ -927,7 +1474,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                     value={filterPlatform}
                     onValueChange={setFilterPlatform}
                   >
-                    <SelectTrigger className="h-9 text-xs w-full">
+                    <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                       <SelectValue placeholder="Semua" />
                     </SelectTrigger>
                     <SelectContent>
@@ -946,7 +1493,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                   Status
                 </Label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="h-9 text-xs w-full">
+                  <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                     <SelectValue placeholder="Semua" />
                   </SelectTrigger>
                   <SelectContent>
@@ -967,7 +1514,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                   value={sortBy}
                   onValueChange={(v) => setSortBy(v as SortOption)}
                 >
-                  <SelectTrigger className="h-9 text-xs w-full">
+                  <SelectTrigger className="h-9 text-xs w-full rounded-xl">
                     <SelectValue placeholder="Urutkan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -982,7 +1529,7 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                 <Button
                   variant="outline"
                   onClick={clearFilters}
-                  className="h-9 w-full text-xs font-medium"
+                  className="h-9 w-full text-xs font-semibold rounded-xl"
                 >
                   Reset Filter
                 </Button>
@@ -991,28 +1538,40 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
           </CardContent>
         </Card>
 
-        {/* Table Content */}
-        <Card>
-          <CardHeader className="pb-3  mb-4">
-            <CardTitle className="flex items-center gap-2 text-lg font-bold">
+        {/* Content Container (Mobile Card List on mobile, Desktop Table on md+) */}
+        <Card className="border-slate-200 shadow-2xs overflow-hidden">
+          <CardHeader className="p-3.5 sm:p-5 border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg font-black text-slate-900">
               <MenuIcon
                 icon={MENU_OPTIONS.find((m) => m.id === activeTab)?.icon || ""}
-                className="w-5 h-5 text-primary"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-violet-600"
               />
-              {MENU_OPTIONS.find((m) => m.id === activeTab)?.label}
-              <span className="ml-auto bg-primary/10 text-primary text-xs px-2.5 py-0.5 rounded-full">
+              <span>{MENU_OPTIONS.find((m) => m.id === activeTab)?.label}</span>
+              <span className="ml-auto bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 {filteredOrders.length} Pesanan
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6 sm:pt-0">
-            <div className="overflow-x-auto">
+          <CardContent className="p-0">
+            {/* Mobile View: Cards */}
+            <div className="block md:hidden p-3 space-y-3">
               {filteredOrders.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg mx-6 my-4">
+                <div className="text-center py-10 text-muted-foreground bg-slate-50 rounded-xl my-2 text-xs">
                   Tidak ada pesanan{" "}
-                  {MENU_OPTIONS.find(
-                    (m) => m.id === activeTab,
-                  )?.label.toLowerCase()}{" "}
+                  {MENU_OPTIONS.find((m) => m.id === activeTab)?.label.toLowerCase()}{" "}
+                  yang ditemukan.
+                </div>
+              ) : (
+                renderMobileCards()
+              )}
+            </div>
+
+            {/* Desktop View: Full Table */}
+            <div className="hidden md:block overflow-x-auto">
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg mx-6 my-4 text-sm">
+                  Tidak ada pesanan{" "}
+                  {MENU_OPTIONS.find((m) => m.id === activeTab)?.label.toLowerCase()}{" "}
                   yang ditemukan.
                 </div>
               ) : (
@@ -1021,11 +1580,17 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 mx-6 mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Baris per halaman:</span>
-                <Select value={itemsPerPage} onValueChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}>
-                  <SelectTrigger className="h-8 w-[80px] text-xs">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-5 border-t border-slate-100">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                <span className="text-xs text-slate-500 font-medium">Baris per halaman:</span>
+                <Select
+                  value={itemsPerPage}
+                  onValueChange={(val) => {
+                    setItemsPerPage(val);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[80px] text-xs rounded-lg">
                     <SelectValue placeholder="25" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1036,26 +1601,28 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {itemsPerPage !== "all" && totalPages > 1 && (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3">
+                  <span className="text-xs text-slate-500 font-medium">
                     Halaman {currentPage} dari {totalPages}
                   </span>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
+                      className="h-8 px-3 text-xs rounded-lg font-semibold"
                     >
                       Prev
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
+                      className="h-8 px-3 text-xs rounded-lg font-semibold"
                     >
                       Next
                     </Button>

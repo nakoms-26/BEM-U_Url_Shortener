@@ -137,3 +137,17 @@ export function getContentDateKey(order: Order): string | null {
       return null;
   }
 }
+
+export function getWaUrl(nomor?: string): string {
+  if (!nomor) return "#";
+  const clean = nomor.replace(/\D/g, "");
+  if (!clean) return "#";
+  if (clean.startsWith("0")) {
+    return `https://wa.me/62${clean.slice(1)}`;
+  }
+  if (clean.startsWith("62")) {
+    return `https://wa.me/${clean}`;
+  }
+  return `https://wa.me/62${clean}`;
+}
+
