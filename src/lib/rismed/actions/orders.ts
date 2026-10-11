@@ -59,6 +59,39 @@ interface PrismaOrderRecord {
   hadiahSurvey: string | null;
 }
 
+function safeParseArray(val: unknown): string[] {
+  if (Array.isArray(val)) return val as string[];
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // Jika string format biasa (cth: "Instagram Feed, X (Twitter)")
+      return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
+function safeParseObject(val: unknown): Record<string, boolean> {
+  if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+    return val as Record<string, boolean>;
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return {};
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === "object" && parsed !== null) return parsed;
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 // Helper to format Prisma Order model back to the application's Order type (snake_case)
 function formatOrder(dbOrder: PrismaOrderRecord): Order {
   return {
@@ -74,9 +107,7 @@ function formatOrder(dbOrder: PrismaOrderRecord): Order {
 
     // Desain & Publikasi
     judul_desain: dbOrder.judulDesain || "",
-    platform_publikasi: Array.isArray(dbOrder.platformPublikasi) 
-      ? (dbOrder.platformPublikasi as string[])
-      : (typeof dbOrder.platformPublikasi === 'string' ? JSON.parse(dbOrder.platformPublikasi) : []),
+    platform_publikasi: safeParseArray(dbOrder.platformPublikasi),
     tanggal_publikasi: dbOrder.tanggalPublikasi ? dbOrder.tanggalPublikasi.toISOString().split("T")[0] : "",
     waktu_publikasi: dbOrder.waktuPublikasi || "",
     link_thumbnail: dbOrder.linkThumbnail || "",
@@ -86,9 +117,7 @@ function formatOrder(dbOrder: PrismaOrderRecord): Order {
     custom_shortlink: dbOrder.customShortlink || "",
     fitur_tambahan_web: dbOrder.fiturTambahanWeb || "",
     link_desain_selesai: dbOrder.linkDesainSelesai || "",
-    status_publikasi: typeof dbOrder.statusPublikasi === "object" && dbOrder.statusPublikasi !== null 
-      ? (dbOrder.statusPublikasi as Record<string, boolean>)
-      : (typeof dbOrder.statusPublikasi === "string" ? JSON.parse(dbOrder.statusPublikasi || "{}") : {}),
+    status_publikasi: safeParseObject(dbOrder.statusPublikasi),
 
     // Website & Twibbon
     website_sub_type: dbOrder.websiteSubType as "shortlink" | "laman_website" | "twibbon" | undefined,
@@ -153,12 +182,35 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
     // Desain & Publikasi fields
     if (data.menu_type === "desain_publikasi") {
       dbData.judulDesain = String(data.judul_desain || "");
-      dbData.platformPublikasi = Array.isArray(data.platform_publikasi) ? data.platform_publikasi : [];
+      const platforms = Array.isArray(data.platform_publikasi) ? (data.platform_publikasi as string[]) : [];
+      dbData.platformPublikasi = platforms;
       if (data.tanggal_publikasi) {
         dbData.tanggalPublikasi = new Date(String(data.tanggal_publikasi));
       }
       dbData.waktuPublikasi = String(data.waktu_publikasi || "");
-      dbData.linkFileKonten = String(data.link_file_konten || "");
+      
+      let linkFile = String(data.link_file_konten || "");
+
+      // Otomatisasi Google Drive via Apps Script jika URL GAS terpasang dan belum ada link drive
+      const gasWebhookUrl = process.env.GAS_DRIVE_WEBHOOK_URL || process.env.GAS_DRIVE_WEBHOOK_UR;
+      if ((!linkFile || linkFile.trim() === "-" || linkFile.trim() === "") && gasWebhookUrl) {
+        try {
+          const { triggerGasDriveWebhook } = await import("./drive-automation");
+          const gasRes = await triggerGasDriveWebhook({
+            kementerian: dbData.kementerian as string,
+            tanggal_publikasi: data.tanggal_publikasi ? String(data.tanggal_publikasi) : "",
+            waktu_publikasi: dbData.waktuPublikasi as string,
+            platform_publikasi: platforms,
+          });
+          if (gasRes.success && gasRes.data?.folderUrl) {
+            linkFile = gasRes.data.folderUrl;
+          }
+        } catch (gasErr) {
+          console.warn("GAS Drive automator warning on order creation:", gasErr);
+        }
+      }
+
+      dbData.linkFileKonten = linkFile;
       dbData.linkCaptionDocs = String(data.link_caption_docs || "");
       dbData.requestLagu = data.request_lagu ? String(data.request_lagu) : null;
       dbData.statusPublikasi = {};

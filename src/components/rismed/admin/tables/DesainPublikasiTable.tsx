@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker03 } from "@/components/rismed/shadcn-studio/date-picker/date-picker-03";
+import { createDriveFolderForExistingOrder } from "@/lib/rismed/actions/drive-automation";
 import {
   ChevronDown,
   ChevronUp,
@@ -35,6 +36,7 @@ import {
   Check,
   FileText,
   FolderArchive,
+  FolderPlus,
   Music,
   Phone,
 } from "lucide-react";
@@ -59,11 +61,33 @@ export function DesainPublikasiTable({
   deleteOrder,
 }: DesainPublikasiTableProps) {
   const [expandedOrderIds, setExpandedOrderIds] = React.useState<string[]>([]);
+  const [driveCreatingId, setDriveCreatingId] = React.useState<string | null>(null);
 
   const toggleDetail = (id: string) => {
     setExpandedOrderIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
+  };
+
+  const handleGenerateDrive = async (orderId: string) => {
+    setDriveCreatingId(orderId);
+    try {
+      const res = await createDriveFolderForExistingOrder(orderId);
+      if (res.success && res.folderUrl) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, link_file_konten: res.folderUrl! } : o
+          )
+        );
+        alert("Folder Google Drive berhasil dibuat otomatis dan ditautkan!");
+      } else {
+        alert(res.error || "Gagal membuat folder Google Drive via Apps Script");
+      }
+    } catch (err: unknown) {
+      alert("Terjadi kesalahan: " + String(err));
+    } finally {
+      setDriveCreatingId(null);
+    }
   };
 
   return (
@@ -173,7 +197,7 @@ export function DesainPublikasiTable({
 
                 {/* Quick Assets Buttons */}
                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                  {order.link_file_konten && (
+                  {order.link_file_konten && order.link_file_konten.trim() !== "-" ? (
                     <a
                       href={order.link_file_konten}
                       target="_blank"
@@ -183,8 +207,24 @@ export function DesainPublikasiTable({
                       <FolderArchive className="w-3 h-3 text-blue-600" />
                       <span>Files Drive</span>
                     </a>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateDrive(order.id)}
+                      disabled={driveCreatingId === order.id}
+                      className="h-7 px-2.5 text-[11px] font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border-violet-200 rounded-xl inline-flex items-center gap-1 active:scale-95 transition-all"
+                    >
+                      {driveCreatingId === order.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin text-violet-600" />
+                      ) : (
+                        <FolderPlus className="w-3 h-3 text-violet-600" />
+                      )}
+                      <span>Buat Drive (GAS)</span>
+                    </Button>
                   )}
-                  {order.link_caption_docs && (
+                  {order.link_caption_docs && order.link_caption_docs.trim() !== "-" && (
                     <a
                       href={order.link_caption_docs}
                       target="_blank"
@@ -482,7 +522,7 @@ export function DesainPublikasiTable({
 
                     {/* Quick Asset & Song Links */}
                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                      {order.link_file_konten && (
+                      {order.link_file_konten && order.link_file_konten.trim() !== "-" ? (
                         <a
                           href={order.link_file_konten}
                           target="_blank"
@@ -493,9 +533,24 @@ export function DesainPublikasiTable({
                           <FolderArchive className="w-2.5 h-2.5" />
                           <span>Files</span>
                         </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateDrive(order.id)}
+                          disabled={driveCreatingId === order.id}
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                          title="Buat folder Google Drive otomatis via Apps Script"
+                        >
+                          {driveCreatingId === order.id ? (
+                            <Loader2 className="w-2.5 h-2.5 animate-spin text-violet-600" />
+                          ) : (
+                            <FolderPlus className="w-2.5 h-2.5 text-violet-600" />
+                          )}
+                          <span>+ Drive</span>
+                        </button>
                       )}
 
-                      {order.link_caption_docs && (
+                      {order.link_caption_docs && order.link_caption_docs.trim() !== "-" && (
                         <a
                           href={order.link_caption_docs}
                           target="_blank"

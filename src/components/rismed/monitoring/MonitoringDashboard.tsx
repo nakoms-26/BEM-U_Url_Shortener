@@ -252,6 +252,10 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
     const collisionMap: { [key: string]: DesainPublikasiOrder[] } = {};
 
     desainOrders.forEach((order) => {
+      // Abaikan jika tanggal atau waktu belum diatur agar tidak menimbulkan tabrakan semu
+      if (!order.tanggal_publikasi || !order.waktu_publikasi || order.waktu_publikasi.trim() === "-") {
+        return;
+      }
       const key = `${order.tanggal_publikasi}_${order.waktu_publikasi}`;
       if (!collisionMap[key]) {
         collisionMap[key] = [];
@@ -271,8 +275,11 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
   }, [visibleOrders]);
 
   const hasCollision = (order: DesainPublikasiOrder) => {
+    if (!order.tanggal_publikasi || !order.waktu_publikasi || order.waktu_publikasi.trim() === "-") {
+      return false;
+    }
     const key = `${order.tanggal_publikasi}_${order.waktu_publikasi}`;
-    return scheduleCollisions[key] && scheduleCollisions[key].length > 1;
+    return Boolean(scheduleCollisions[key] && scheduleCollisions[key].length > 1);
   };
 
   // Filter by menu type and other filters
@@ -424,30 +431,26 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
     if (collisionCount === 0 || activeTab !== "desain_publikasi") return null;
 
     return (
-      <Card className="border-destructive/20 bg-destructive/10 mb-6">
-        <CardContent className="py-3">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div className="text-destructive">
-              <p className="font-semibold">
-                Peringatan: Jadwal Upload Bersamaan
+      <Card className="border-destructive/20 bg-destructive/10 mb-4 sm:mb-6">
+        <CardContent className="py-3 px-3.5 sm:px-4">
+          <div className="flex items-start gap-2.5 sm:gap-3">
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-destructive w-full min-w-0">
+              <p className="font-bold text-xs sm:text-sm">
+                Peringatan: Jadwal Upload Bersamaan ({collisionCount} jadwal)
               </p>
-              <p className="text-sm text-destructive/90 mt-1">
-                Ada {collisionCount} jadwal dengan lebih dari 1 pesanan:
-              </p>
-              <ul className="text-sm text-destructive/90 mt-2 space-y-1">
+              <div className="mt-2 max-h-40 overflow-y-auto no-scrollbar space-y-1.5 pr-1">
                 {Object.entries(scheduleCollisions).map(([key, orders]) => (
-                  <li key={key} className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {formatDate(key.split("_")[0])} - {key.split("_")[1]}:
+                  <div key={key} className="text-xs bg-white/60 dark:bg-zinc-900/40 p-2 rounded-lg border border-destructive/10">
+                    <span className="font-bold block sm:inline mr-1 text-[11px] sm:text-xs">
+                      {formatDate(key.split("_")[0])} • {key.split("_")[1]}:
                     </span>
-                    <span>
-                      {orders.map((o) => o.judul_desain).join(", ")} (
-                      {orders.length} pesanan)
+                    <span className="text-[11px] sm:text-xs line-clamp-2">
+                      {orders.map((o) => o.judul_desain).join(", ")} ({orders.length} pesanan)
                     </span>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -1363,22 +1366,24 @@ export function MonitoringDashboard({ initialOrders = [] }: MonitoringDashboardP
         className="w-full"
       >
         {/* Navigation Tabs - Horizontal Scroll on Mobile */}
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <TabsList className="flex items-center gap-1.5 overflow-x-auto w-full p-1 bg-slate-100/90 dark:bg-zinc-800/80 rounded-2xl no-scrollbar justify-start sm:justify-center">
-            {MENU_OPTIONS.map((menu) => (
-              <TabsTrigger
-                key={menu.id}
-                value={menu.id}
-                className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
-              >
-                <MenuIcon icon={menu.icon} className="w-3.5 h-3.5" />
-                <span className="whitespace-nowrap">{menu.label}</span>
-                <span className="ml-1 bg-slate-200/80 dark:bg-zinc-700/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
-                  {menuCounts[menu.id]}
-                </span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="w-full max-w-full overflow-hidden mb-4 sm:mb-6">
+          <div className="overflow-x-auto no-scrollbar py-0.5">
+            <TabsList className="inline-flex sm:flex items-center gap-1.5 w-auto sm:w-full min-w-max sm:min-w-0 p-1 bg-slate-100/90 dark:bg-zinc-800/80 rounded-2xl sm:justify-center">
+              {MENU_OPTIONS.map((menu) => (
+                <TabsTrigger
+                  key={menu.id}
+                  value={menu.id}
+                  className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-bold shrink-0 transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-xs"
+                >
+                  <MenuIcon icon={menu.icon} className="w-3.5 h-3.5" />
+                  <span className="whitespace-nowrap">{menu.label}</span>
+                  <span className="ml-1 bg-slate-200/80 dark:bg-zinc-700/80 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
+                    {menuCounts[menu.id]}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </div>
 
         {/* Collision Warning */}

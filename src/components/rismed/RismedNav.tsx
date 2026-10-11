@@ -78,7 +78,7 @@ export function RismedNav() {
       </div>
 
       {/* Navigation Tabs (Horizontal scrollable with clean pills) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
+      <div className="w-full max-w-full flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
         {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
           const isActive = exact
             ? pathname === href
