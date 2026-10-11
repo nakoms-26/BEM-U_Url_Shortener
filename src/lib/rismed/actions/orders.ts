@@ -190,10 +190,11 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
       dbData.waktuPublikasi = String(data.waktu_publikasi || "");
       
       let linkFile = String(data.link_file_konten || "");
+      let linkDesainSelesai = String(data.link_desain_selesai || "");
 
-      // Otomatisasi Google Drive via Apps Script jika URL GAS terpasang dan belum ada link drive
+      // Otomatisasi Google Drive via Apps Script jika URL GAS terpasang dan belum ada link hasil desain
       const gasWebhookUrl = process.env.GAS_DRIVE_WEBHOOK_URL || process.env.GAS_DRIVE_WEBHOOK_UR;
-      if ((!linkFile || linkFile.trim() === "-" || linkFile.trim() === "") && gasWebhookUrl) {
+      if ((!linkDesainSelesai || linkDesainSelesai.trim() === "-" || linkDesainSelesai.trim() === "") && gasWebhookUrl) {
         try {
           const { triggerGasDriveWebhook } = await import("./drive-automation");
           const gasRes = await triggerGasDriveWebhook({
@@ -203,7 +204,11 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
             platform_publikasi: platforms,
           });
           if (gasRes.success && gasRes.data?.folderUrl) {
-            linkFile = gasRes.data.folderUrl;
+            linkDesainSelesai = gasRes.data.folderUrl;
+            // Jika pemohon tidak menyertakan link file konten terpisah, gunakan link folder ini juga
+            if (!linkFile || linkFile.trim() === "-" || linkFile.trim() === "") {
+              linkFile = gasRes.data.folderUrl;
+            }
           }
         } catch (gasErr) {
           console.warn("GAS Drive automator warning on order creation:", gasErr);
@@ -211,6 +216,7 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
       }
 
       dbData.linkFileKonten = linkFile;
+      dbData.linkDesainSelesai = linkDesainSelesai;
       dbData.linkCaptionDocs = String(data.link_caption_docs || "");
       dbData.requestLagu = data.request_lagu ? String(data.request_lagu) : null;
       dbData.statusPublikasi = {};

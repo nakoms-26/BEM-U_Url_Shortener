@@ -862,6 +862,7 @@ function LinkDesainCell({
     "idle" | "saving" | "saved" | "error"
   >("idle");
   const [isFocused, setIsFocused] = React.useState(false);
+  const [isGenerating, setIsGenerating] = React.useState(false);
 
   React.useEffect(() => {
     if (!isFocused && status !== "saving") {
@@ -885,6 +886,27 @@ function LinkDesainCell({
     }
   };
 
+  const handleGenerateDrive = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await createDriveFolderForExistingOrder(orderId);
+      if (res.success && res.folderUrl) {
+        setValue(res.folderUrl);
+        await updateField(orderId, "link_desain_selesai", res.folderUrl);
+        setStatus("saved");
+        setTimeout(() => {
+          setStatus("idle");
+        }, 2000);
+      } else {
+        alert(res.error || "Gagal membuat folder Google Drive via Apps Script");
+      }
+    } catch (e) {
+      alert("Terjadi kesalahan: " + String(e));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-1 w-full">
       <div className="relative flex-1 min-w-0">
@@ -905,7 +927,7 @@ function LinkDesainCell({
               (e.target as HTMLInputElement).blur();
             }
           }}
-          disabled={status === "saving"}
+          disabled={status === "saving" || isGenerating}
           className={`h-7 text-[10px] w-full px-2 pr-5 transition-all ${
             status === "saved"
               ? "border-emerald-500 bg-emerald-50/50 text-emerald-900"
@@ -916,7 +938,7 @@ function LinkDesainCell({
           title="Tekan Enter atau klik di luar untuk menyimpan"
         />
         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-          {status === "saving" && (
+          {(status === "saving" || isGenerating) && (
             <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />
           )}
           {status === "saved" && (
@@ -924,7 +946,23 @@ function LinkDesainCell({
           )}
         </div>
       </div>
-      {value && (
+      {!value ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={handleGenerateDrive}
+          disabled={isGenerating || status === "saving"}
+          className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200 shrink-0"
+          title="Buat folder Google Drive otomatis (GAS)"
+        >
+          {isGenerating ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <FolderPlus className="w-3.5 h-3.5" />
+          )}
+        </Button>
+      ) : (
         <a
           href={value.startsWith("http") ? value : `https://${value}`}
           target="_blank"

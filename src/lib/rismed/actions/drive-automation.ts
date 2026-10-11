@@ -104,11 +104,12 @@ export async function createDriveFolderForExistingOrder(orderId: string): Promis
       };
     }
 
-    // Update link file konten di database dengan link folder yang baru dibuat
+    // Update link hasil desain selesai di database dengan link folder yang baru dibuat
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        linkFileKonten: gasRes.data.folderUrl,
+        linkDesainSelesai: gasRes.data.folderUrl,
+        ...(order.linkFileKonten ? {} : { linkFileKonten: gasRes.data.folderUrl }),
       },
     });
 
