@@ -197,11 +197,12 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
       if ((!linkDesainSelesai || linkDesainSelesai.trim() === "-" || linkDesainSelesai.trim() === "") && gasWebhookUrl) {
         try {
           const { triggerGasDriveWebhook } = await import("./drive-automation");
+          const targetPlatforms = platforms.length > 0 ? platforms : ["Instagram Feed"];
           const gasRes = await triggerGasDriveWebhook({
             kementerian: dbData.kementerian as string,
             tanggal_publikasi: data.tanggal_publikasi ? String(data.tanggal_publikasi) : "",
             waktu_publikasi: dbData.waktuPublikasi as string,
-            platform_publikasi: platforms,
+            platform_publikasi: targetPlatforms,
           });
           if (gasRes.success && gasRes.data?.folderUrl) {
             linkDesainSelesai = gasRes.data.folderUrl;

@@ -90,6 +90,11 @@ export async function createDriveFolderForExistingOrder(orderId: string): Promis
       ? order.tanggalPublikasi.toISOString().split("T")[0]
       : "";
 
+    // Jika platform kosong atau belum dipilih, gunakan fallback Instagram Feed agar folder tetap bisa dibuat otomatis
+    if (platforms.length === 0) {
+      platforms = ["Instagram Feed"];
+    }
+
     const gasRes = await triggerGasDriveWebhook({
       kementerian: order.kementerian,
       tanggal_publikasi: tanggalStr,
@@ -97,10 +102,18 @@ export async function createDriveFolderForExistingOrder(orderId: string): Promis
       platform_publikasi: platforms,
     });
 
-    if (!gasRes.success || !gasRes.data?.folderUrl) {
+    if (!gasRes.success) {
       return {
         success: false,
-        error: gasRes.error || "Gagal membuat folder via Google Apps Script",
+        error: gasRes.error || "Gagal menghubungi Google Apps Script",
+      };
+    }
+
+    if (!gasRes.data?.folderUrl) {
+      return {
+        success: false,
+        error:
+          "Platform publikasi pesanan ini tidak sesuai target (hanya Feed/Story/X/Spotify/WAC).",
       };
     }
 
