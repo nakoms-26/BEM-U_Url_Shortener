@@ -197,7 +197,8 @@ export async function createOrder(data: Record<string, unknown>): Promise<{ succ
       if ((!linkDesainSelesai || linkDesainSelesai.trim() === "-" || linkDesainSelesai.trim() === "") && gasWebhookUrl) {
         try {
           const { triggerGasDriveWebhook } = await import("./drive-automation");
-          const targetPlatforms = platforms.length > 0 ? platforms : ["Instagram Feed"];
+          // Selalu sertakan token "Feed" agar lolos filter Google Apps Script untuk semua pesanan Desain & Publikasi
+          const targetPlatforms = Array.from(new Set([...platforms, "Feed"]));
           const gasRes = await triggerGasDriveWebhook({
             kementerian: dbData.kementerian as string,
             tanggal_publikasi: data.tanggal_publikasi ? String(data.tanggal_publikasi) : "",
