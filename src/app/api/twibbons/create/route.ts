@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       slug,
       description,
       type,
-      chromaColor,
+      capcutUrl,
       layerUrl,
       thumbnailUrl,
       isActive,
@@ -57,16 +57,11 @@ export async function POST(request: NextRequest) {
 
     const config = {
       overlayType: type,
-      chromaKey:
-        type === "VIDEO"
-          ? {
-              color: chromaColor || "#00FF00",
-              similarity: 0.1,
-              smoothness: 0.08,
-            }
-          : null,
+      capcutUrl: type === "VIDEO" ? (capcutUrl || null) : null,
       canvasSize: { width: 1080, height: 1080 },
     };
+
+    const finalOverlayFile = type === "VIDEO" ? (layerUrl || thumbnailUrl) : layerUrl;
 
     const [insertResult] = await twibbonPool.query<ResultSetHeader>(
       `INSERT INTO twibbon (title, slug, description, type, overlayFile, thumbnail, config, isActive, downloadsCount, createdAt, updatedAt)
@@ -76,7 +71,7 @@ export async function POST(request: NextRequest) {
         slug,
         description || null,
         type,
-        layerUrl,
+        finalOverlayFile,
         thumbnailUrl,
         JSON.stringify(config),
         isActive ? 1 : 0,
@@ -87,16 +82,17 @@ export async function POST(request: NextRequest) {
       message: "Twibbon berhasil dibuat!",
       id: insertResult.insertId,
     });
-  } catch (error: any) {
-    console.error("Create twibbon error:", error);
-    if (error.code === "ER_DUP_ENTRY") {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
+    console.error("Create twibbon error:", err);
+    if (err.code === "ER_DUP_ENTRY") {
       return NextResponse.json(
         { message: "Slug twibbon sudah terdaftar." },
         { status: 409 }
       );
     }
     return NextResponse.json(
-      { message: `Gagal membuat twibbon: ${error.message || "Kesalahan server"}` },
+      { message: `Gagal membuat twibbon: ${err.message || "Kesalahan server"}` },
       { status: 500 }
     );
   }

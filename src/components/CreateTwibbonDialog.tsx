@@ -21,7 +21,8 @@ import {
 } from "@/components/glass-select";
 import { toast } from "sonner";
 import { Upload, Film, ImageIcon, Sparkles, Loader2, Info } from "lucide-react";
-import { MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from "@/lib/twibbon-schemas";
+import { MAX_IMAGE_SIZE } from "@/lib/twibbon-schemas";
+import { cn } from "@/lib/utils";
 
 interface CreateTwibbonDialogProps {
   open: boolean;
@@ -38,7 +39,7 @@ export function CreateTwibbonDialog({
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<"IMAGE" | "VIDEO">("IMAGE");
-  const [chromaColor, setChromaColor] = useState("#00FF00");
+  const [capcutUrl, setCapcutUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const [layerFile, setLayerFile] = useState<File | null>(null);
@@ -128,20 +129,33 @@ export function CreateTwibbonDialog({
       toast.error("Slug hanya boleh berisi huruf, angka, dan strip (-).");
       return;
     }
-    if (!layerFile) {
-      toast.error(`File frame (${type === "IMAGE" ? "PNG transparan" : "Video MP4"}) wajib diunggah.`);
-      return;
+    if (type === "VIDEO") {
+      if (!capcutUrl.trim()) {
+        toast.error("Link template CapCut wajib diisi.");
+        return;
+      }
+      try {
+        new URL(capcutUrl.trim());
+      } catch {
+        toast.error("Format link template CapCut tidak valid (contoh: https://www.capcut.com/template-detail/...).");
+        return;
+      }
+    } else {
+      if (!layerFile) {
+        toast.error("File frame (PNG transparan) wajib diunggah.");
+        return;
+      }
+      if (layerFile.size > MAX_IMAGE_SIZE) {
+        toast.error("Ukuran file frame layer maksimal 10MB.");
+        return;
+      }
     }
+
     if (!thumbnailFile) {
       toast.error("File thumbnail wajib diunggah.");
       return;
     }
 
-    const maxLayerSize = type === "VIDEO" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-    if (layerFile.size > maxLayerSize) {
-      toast.error(`Ukuran file frame layer maksimal ${type === "VIDEO" ? "100MB" : "10MB"}.`);
-      return;
-    }
     if (thumbnailFile.size > MAX_IMAGE_SIZE) {
       toast.error("Ukuran thumbnail maksimal 10MB.");
       return;
@@ -156,14 +170,17 @@ export function CreateTwibbonDialog({
       if (!credRes.ok) throw new Error("Gagal mengambil kredensial server upload.");
       const creds = await credRes.json();
 
-      // 2. Upload file layer/frame
-      const layerUrl = await uploadFile(
-        layerFile,
-        "twibbon",
-        creds.secret,
-        creds.url,
-        `Mengunggah File Frame ${type === "VIDEO" ? "Video" : "Gambar"}...`
-      );
+      // 2. Upload file layer/frame jika tipe IMAGE
+      let layerUrl: string | undefined = undefined;
+      if (type === "IMAGE" && layerFile) {
+        layerUrl = await uploadFile(
+          layerFile,
+          "twibbon",
+          creds.secret,
+          creds.url,
+          "Mengunggah File Frame Gambar..."
+        );
+      }
 
       // 3. Upload file thumbnail
       const thumbnailUrl = await uploadFile(
@@ -185,7 +202,7 @@ export function CreateTwibbonDialog({
           slug,
           description,
           type,
-          chromaColor: type === "VIDEO" ? chromaColor : undefined,
+          capcutUrl: type === "VIDEO" ? capcutUrl.trim() : undefined,
           layerUrl,
           thumbnailUrl,
           isActive,
@@ -203,15 +220,16 @@ export function CreateTwibbonDialog({
       setSlug("");
       setDescription("");
       setType("IMAGE");
-      setChromaColor("#00FF00");
+      setCapcutUrl("");
       setIsActive(true);
       setLayerFile(null);
       setThumbnailFile(null);
       setUploadProgress(null);
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan saat memproses.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      toast.error(error.message || "Terjadi kesalahan saat memproses.");
     } finally {
       setLoading(false);
       setUploadProgress(null);
@@ -267,56 +285,58 @@ export function CreateTwibbonDialog({
             </div>
           </div>
 
-          {/* Tipe & Warna Chroma Key (if Video) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">
-                Tipe Twibbon <span className="text-red-500">*</span>
-              </Label>
-              <GlassSelect value={type} onValueChange={(v: "IMAGE" | "VIDEO") => setType(v)}>
-                <GlassSelectTrigger className="w-full">
-                  <GlassSelectValue placeholder="Pilih tipe" />
-                </GlassSelectTrigger>
-                <GlassSelectContent>
-                  <GlassSelectItem value="IMAGE">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-violet-600" />
-                      <span>Gambar (PNG Transparan)</span>
-                    </div>
-                  </GlassSelectItem>
-                  <GlassSelectItem value="VIDEO">
-                    <div className="flex items-center gap-2">
-                      <Film className="w-4 h-4 text-emerald-600" />
-                      <span>Video (MP4 Green Screen)</span>
-                    </div>
-                  </GlassSelectItem>
-                </GlassSelectContent>
-              </GlassSelect>
-            </div>
-
-            {type === "VIDEO" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="chroma-color" className="text-xs font-semibold text-slate-700">
-                  Warna Chroma Key (Green Screen)
-                </Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    id="chroma-color"
-                    value={chromaColor}
-                    onChange={(e) => setChromaColor(e.target.value)}
-                    className="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5"
-                  />
-                  <GlassInput
-                    value={chromaColor}
-                    onChange={(e) => setChromaColor(e.target.value)}
-                    className="font-mono text-sm uppercase"
-                    placeholder="#00FF00"
-                  />
-                </div>
-              </div>
-            )}
+          {/* Tipe Twibbon */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-slate-700">
+              Tipe Twibbon <span className="text-red-500">*</span>
+            </Label>
+            <GlassSelect value={type} onValueChange={(v: "IMAGE" | "VIDEO") => setType(v)}>
+              <GlassSelectTrigger className="w-full">
+                <GlassSelectValue placeholder="Pilih tipe" />
+              </GlassSelectTrigger>
+              <GlassSelectContent>
+                <GlassSelectItem value="IMAGE">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-violet-600" />
+                    <span>Gambar (PNG Transparan)</span>
+                  </div>
+                </GlassSelectItem>
+                <GlassSelectItem value="VIDEO">
+                  <div className="flex items-center gap-2">
+                    <Film className="w-4 h-4 text-emerald-600" />
+                    <span>Video (Template CapCut)</span>
+                  </div>
+                </GlassSelectItem>
+              </GlassSelectContent>
+            </GlassSelect>
           </div>
+
+          {/* Khusus VIDEO: Info Banner & Link CapCut */}
+          {type === "VIDEO" && (
+            <div className="space-y-3 p-3.5 rounded-2xl bg-violet-50/70 border border-violet-200/70">
+              <div className="flex items-start gap-2.5 text-xs text-violet-900 leading-relaxed">
+                <Info className="w-4 h-4 text-violet-600 shrink-0 mt-0.5" />
+                <p>
+                  Twibbon video diarahkan ke template CapCut. Pengunjung website akan melihat thumbnail dan tombol langsung ke CapCut.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="twibbon-capcut-url" className="text-xs font-semibold text-slate-700">
+                  Link Template CapCut <span className="text-red-500">*</span>
+                </Label>
+                <GlassInput
+                  id="twibbon-capcut-url"
+                  type="url"
+                  placeholder="https://www.capcut.com/template-detail/..."
+                  value={capcutUrl}
+                  onChange={(e) => setCapcutUrl(e.target.value)}
+                  className="font-mono text-xs sm:text-sm bg-white"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {/* Deskripsi & Caption */}
           <div className="space-y-1.5">
@@ -334,37 +354,37 @@ export function CreateTwibbonDialog({
           </div>
 
           {/* File Uploads */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {/* Layer Frame */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                <span>File Frame {type === "VIDEO" ? "Video" : "Gambar"} <span className="text-red-500">*</span></span>
-                <span className="text-[10px] text-slate-400 font-normal">
-                  {type === "VIDEO" ? "MP4 (Max 100MB)" : "PNG (Max 10MB)"}
-                </span>
-              </Label>
-              <div className="relative border-2 border-dashed border-slate-200 hover:border-violet-400 rounded-xl p-3 text-center transition-colors bg-slate-50/50">
-                <input
-                  type="file"
-                  accept={type === "VIDEO" ? "video/mp4,video/webm" : "image/png,image/webp"}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) setLayerFile(file);
-                  }}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  required
-                />
-                <div className="flex flex-col items-center justify-center py-1 pointer-events-none">
-                  <Upload className="w-5 h-5 text-slate-400 mb-1" />
-                  <span className="text-xs font-medium text-slate-700 truncate max-w-[180px]">
-                    {layerFile ? layerFile.name : "Pilih file frame..."}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {layerFile ? formatBytes(layerFile.size) : "Disarankan 1080x1350 (4:5)"}
-                  </span>
+          <div className={cn("grid gap-4 pt-1", type === "IMAGE" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1")}>
+            {/* Layer Frame (Hanya untuk IMAGE) */}
+            {type === "IMAGE" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>File Frame Gambar <span className="text-red-500">*</span></span>
+                  <span className="text-[10px] text-slate-400 font-normal">PNG (Max 10MB)</span>
+                </Label>
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-violet-400 rounded-xl p-3 text-center transition-colors bg-slate-50/50">
+                  <input
+                    type="file"
+                    accept="image/png,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setLayerFile(file);
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    required
+                  />
+                  <div className="flex flex-col items-center justify-center py-1 pointer-events-none">
+                    <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                    <span className="text-xs font-medium text-slate-700 truncate max-w-[180px]">
+                      {layerFile ? layerFile.name : "Pilih file frame..."}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {layerFile ? formatBytes(layerFile.size) : "Disarankan 1080x1350 (4:5)"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Thumbnail */}
             <div className="space-y-1.5">

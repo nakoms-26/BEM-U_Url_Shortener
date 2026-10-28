@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { TwibbonItem } from "@/lib/twibbon-schemas";
@@ -22,7 +22,6 @@ import {
   Copy,
   Check,
   RefreshCw,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +63,7 @@ export default function TwibbonManagementClient({
   const publicBaseUrl =
     process.env.NEXT_PUBLIC_TWIBBON_BASE_URL || "https://twibbon.bem-unsoed.com";
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setIsRefreshing(true);
     try {
       const res = await fetch("/api/twibbons");
@@ -82,7 +81,7 @@ export default function TwibbonManagementClient({
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     const syncAuth = async () => {
@@ -98,7 +97,7 @@ export default function TwibbonManagementClient({
 
     window.addEventListener("auth-changed", syncAuth);
     return () => window.removeEventListener("auth-changed", syncAuth);
-  }, []);
+  }, [refreshData]);
 
   const handleSuperAdminLogin = async () => {
     if (!loginPassword) {
@@ -131,24 +130,11 @@ export default function TwibbonManagementClient({
         window.dispatchEvent(new Event("auth-changed"));
       }
       await refreshData();
-    } catch (err: any) {
-      toast.error(err.message || "Gagal masuk sebagai Nakomisme.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      toast.error(error.message || "Gagal masuk sebagai Nakomisme.");
     } finally {
       setLoginLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      setIsSuperAdmin(false);
-      toast.success("Keluar dari mode Nakomisme. Menampilkan twibbon terpublikasi.");
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("auth-changed"));
-      }
-      await refreshData();
-    } catch {
-      toast.error("Gagal keluar.");
     }
   };
 
@@ -395,6 +381,12 @@ export default function TwibbonManagementClient({
                     >
                       {twibbon.type === "VIDEO" ? "Video" : "Foto"}
                     </span>
+
+                    {twibbon.type === "VIDEO" && (
+                      <span className="text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full backdrop-blur-md border shadow-2xs bg-black/80 text-white border-white/20">
+                        CapCut
+                      </span>
+                    )}
                   </div>
 
                   {/* Downloads count */}
@@ -427,6 +419,21 @@ export default function TwibbonManagementClient({
                     )}
                   </button>
                 </div>
+
+                {twibbon.type === "VIDEO" && twibbon.config?.capcutUrl && (
+                  <div className="mb-2">
+                    <a
+                      href={twibbon.config.capcutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 px-2 py-1 rounded-lg transition-colors w-full justify-center shadow-2xs"
+                      title="Buka Template CapCut"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                      <span className="truncate">Template CapCut</span>
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Footer Actions */}

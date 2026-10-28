@@ -5,6 +5,21 @@ export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 export const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 
+export interface TwibbonConfig {
+  overlayType?: "IMAGE" | "VIDEO";
+  capcutUrl?: string | null;
+  chromaKey?: {
+    color?: string;
+    similarity?: number;
+    smoothness?: number;
+  } | null;
+  canvasSize?: {
+    width: number;
+    height: number;
+  };
+  [key: string]: unknown;
+}
+
 export interface TwibbonItem {
   id: number;
   title: string;
@@ -13,18 +28,7 @@ export interface TwibbonItem {
   type: "IMAGE" | "VIDEO";
   overlayFile: string;
   thumbnail: string;
-  config: {
-    overlayType?: "IMAGE" | "VIDEO";
-    chromaKey?: {
-      color?: string;
-      similarity?: number;
-      smoothness?: number;
-    } | null;
-    canvasSize?: {
-      width: number;
-      height: number;
-    };
-  } | any;
+  config: TwibbonConfig;
   isActive: boolean;
   downloadsCount: number;
   createdAt: string;
@@ -53,14 +57,30 @@ export const twibbonBaseSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, "Format warna HEX tidak valid (contoh: #00FF00)")
     .optional()
     .nullable(),
+  capcutUrl: z
+    .string()
+    .url("URL template CapCut tidak valid")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   isActive: z.boolean().default(true),
 });
 
-export const createTwibbonApiSchema = twibbonBaseSchema.extend({
-  layerUrl: z.string().url("URL layer frame tidak valid"),
-  thumbnailUrl: z.string().url("URL thumbnail tidak valid"),
-  password: z.string().optional().nullable(),
-});
+export const createTwibbonApiSchema = twibbonBaseSchema
+  .extend({
+    layerUrl: z.string().url("URL layer frame tidak valid").optional().nullable(),
+    thumbnailUrl: z.string().url("URL thumbnail tidak valid"),
+    password: z.string().optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "IMAGE" && !data.layerUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["layerUrl"],
+        message: "File frame gambar PNG wajib diunggah",
+      });
+    }
+  });
 
 export const updateTwibbonApiSchema = twibbonBaseSchema.extend({
   id: z.coerce.number().min(1, "ID twibbon tidak valid"),

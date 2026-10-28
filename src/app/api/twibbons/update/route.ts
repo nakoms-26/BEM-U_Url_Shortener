@@ -20,7 +20,7 @@ export async function PATCH(request: NextRequest) {
       slug,
       description,
       type,
-      chromaColor,
+      capcutUrl,
       layerUrl,
       thumbnailUrl,
       isActive,
@@ -71,10 +71,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const finalOverlayFile = layerUrl || existing.overlayFile;
     const finalThumbnail = thumbnailUrl || existing.thumbnail;
+    const finalOverlayFile =
+      layerUrl ||
+      existing.overlayFile ||
+      (type === "VIDEO" ? finalThumbnail : "");
 
-    let parsedConfig: any = {};
+    let parsedConfig: Record<string, unknown> = {};
     if (typeof existing.config === "string") {
       try {
         parsedConfig = JSON.parse(existing.config);
@@ -82,22 +85,21 @@ export async function PATCH(request: NextRequest) {
         parsedConfig = {};
       }
     } else if (typeof existing.config === "object" && existing.config !== null) {
-      parsedConfig = existing.config;
+      parsedConfig = existing.config as Record<string, unknown>;
     }
 
-    const updatedConfig = {
+    const updatedConfig: Record<string, unknown> = {
       ...parsedConfig,
       overlayType: type,
-      chromaKey:
+      capcutUrl:
         type === "VIDEO"
-          ? {
-              color: chromaColor || "#00FF00",
-              similarity: 0.1,
-              smoothness: 0.08,
-            }
+          ? (capcutUrl !== undefined ? (capcutUrl || null) : (parsedConfig.capcutUrl || null))
           : null,
       canvasSize: parsedConfig.canvasSize || { width: 1080, height: 1080 },
     };
+    if (type === "VIDEO") {
+      delete updatedConfig.chromaKey;
+    }
 
     const [updateResult] = await twibbonPool.query<ResultSetHeader>(
       `UPDATE twibbon
@@ -126,10 +128,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       message: "Twibbon berhasil diperbarui!",
     });
-  } catch (error: any) {
-    console.error("Update twibbon error:", error);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error("Update twibbon error:", err);
     return NextResponse.json(
-      { message: `Gagal memperbarui twibbon: ${error.message || "Kesalahan server"}` },
+      { message: `Gagal memperbarui twibbon: ${err.message || "Kesalahan server"}` },
       { status: 500 }
     );
   }
