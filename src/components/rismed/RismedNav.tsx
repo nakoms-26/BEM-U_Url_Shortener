@@ -88,6 +88,7 @@ export function RismedNav() {
             <Link
               key={href}
               href={href}
+              prefetch={false}
               className={cn(
                 "inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95",
                 isActive
