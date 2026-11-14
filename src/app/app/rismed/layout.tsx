@@ -1,5 +1,6 @@
 import { RismedNav } from "@/components/rismed/RismedNav";
 import { RismedTelegramButton } from "@/components/rismed/RismedTelegramButton";
+import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 
 export const metadata = {
   title: "Pemesanan Rismed BEM Unsoed 2026",
@@ -17,6 +18,7 @@ export default function RismedLayout({
       <RismedNav />
       <div className="flex-1 w-full">{children}</div>
       <RismedTelegramButton />
+      <InstallPwaPrompt />
     </div>
   );
 }
