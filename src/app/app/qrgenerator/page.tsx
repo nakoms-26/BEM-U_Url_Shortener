@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Download, Upload, Image as ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   ColorPicker,
   ColorPickerArea,
@@ -22,30 +21,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SHORT_LINK_BASE_URL } from "@/lib/url-helper";
+import type QRCodeStyling from "qr-code-styling";
 
 export default function QRCodeGeneratorPage() {
+  const QR_SIZE = 1024; // render size; preview scaled by CSS, download stays sharp
   const [url, setUrl] = useState(SHORT_LINK_BASE_URL);
   const [qrColor, setQrColor] = useState("#0f172a");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoName, setLogoName] = useState("");
   const [logoSizeMultiplier, setLogoSizeMultiplier] = useState(0.4);
+  const [downloadError, setDownloadError] = useState("");
 
   // Style Options
   type DotType = "dots" | "rounded" | "classy" | "classy-rounded" | "square" | "extra-rounded";
   const [dotsType, setDotsType] = useState<DotType>("square");
-  const [cornerType, setCornerType] = useState<"square" | "extra-rounded" | "dot">("square");
+  type CornerType = "square" | "extra-rounded" | "dot";
+  const [cornerType, setCornerType] = useState<CornerType>("square");
 
   const qrRef = useRef<HTMLDivElement>(null);
-  const qrCodeInstance = useRef<any>(null); // For QRCodeStyling instance
+  const qrCodeInstance = useRef<QRCodeStyling | null>(null);
 
   useEffect(() => {
     // Import dynamically to avoid SSR window errors
     import("qr-code-styling").then((module) => {
-      const QRCodeStyling = module.default;
-      qrCodeInstance.current = new QRCodeStyling({
-        width: 280,
-        height: 280,
-        type: "svg",
+      const QRCodeCtor = module.default;
+      qrCodeInstance.current = new QRCodeCtor({
+        width: QR_SIZE,
+        height: QR_SIZE,
+        type: "canvas", // ponytail: canvas, not svg — lib only rebuilds svg in update(), leaving a stale canvas for png download
         data: url || SHORT_LINK_BASE_URL,
         margin: 5,
         qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "H" },
@@ -94,9 +97,17 @@ export default function QRCodeGeneratorPage() {
     setLogoName("");
   };
 
-  const downloadQRCode = () => {
-    if (qrCodeInstance.current) {
-      qrCodeInstance.current.download({ name: "BEM-QRCode", extension: "png" });
+  const downloadQRCode = async () => {
+    const instance = qrCodeInstance.current;
+    if (!instance) {
+      setDownloadError("QR belum siap. Klik download sekali lagi.");
+      return;
+    }
+    setDownloadError("");
+    try {
+      await instance.download({ name: "BEM-QRCode", extension: "png" });
+    } catch (err) {
+      setDownloadError(`Gagal mengunduh QR: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -141,7 +152,7 @@ export default function QRCodeGeneratorPage() {
           {/* Style Corner */}
           <div className="bg-white border border-slate-200 rounded-[1.5rem] p-4 shadow-sm flex flex-col">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Sudut Mata</label>
-            <Select value={cornerType} onValueChange={(val) => setCornerType(val as any)}>
+            <Select value={cornerType} onValueChange={(val) => setCornerType(val as CornerType)}>
               <SelectTrigger className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 focus:ring-violet-500 focus:ring-offset-0 focus:outline-none">
                 <SelectValue placeholder="Pilih sudut mata" />
               </SelectTrigger>
@@ -215,7 +226,7 @@ export default function QRCodeGeneratorPage() {
       <div className="mt-2 flex flex-col items-center gap-6">
         <div className="w-full aspect-square bg-white border border-slate-200 shadow-sm rounded-[2rem] flex items-center justify-center p-8 relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]" />
-          <div ref={qrRef} className="relative z-10 w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-w-[280px]"></div>
+          <div ref={qrRef} className="relative z-10 w-full h-full flex items-center justify-center [&>canvas]:w-full [&>canvas]:h-auto [&>canvas]:max-w-full"></div>
         </div>
 
         <button
@@ -224,6 +235,10 @@ export default function QRCodeGeneratorPage() {
         >
           <Download className="w-5 h-5" /> Download QR Code
         </button>
+
+        {downloadError && (
+          <p className="text-xs font-medium text-red-500 text-center">{downloadError}</p>
+        )}
       </div>
     </div>
   );
